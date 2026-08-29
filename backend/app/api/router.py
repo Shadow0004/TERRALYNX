@@ -136,6 +136,7 @@ class RadarLayerResponse(BaseModel):
 class PointTelemetryResponse(BaseModel):
     latitude: float
     longitude: float
+    location_name: Optional[str] = "Coastal Sector"
     temperature_c: float
     humidity_percent: float
     rainfall_rate_mm_hr: float

@@ -1,6 +1,6 @@
 """
 Open-Meteo Real-Time Weather and Flood Telemetry Service.
-Fetches live precipitation, wind vectors, soil saturation, and point-level pin inspection.
+Fetches live precipitation, wind vectors, soil saturation, and reverse geocoded place names.
 100% Free - Zero API Key Required.
 """
 import httpx
@@ -28,6 +28,48 @@ def get_weather_description(code: int) -> str:
         95: "Thunderstorm", 96: "Thunderstorm with Slight Hail", 99: "Severe Thunderstorm with Heavy Hail"
     }
     return mapping.get(code, "Cloudy / Atmospheric Disturbance")
+
+async def reverse_geocode_location(lat: float, lng: float, client: httpx.AsyncClient) -> str:
+    """
+    Resolves human-readable place / city / district name using BigDataCloud & Nominatim free APIs.
+    """
+    try:
+        url = f"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={lat}&longitude={lng}&localityLanguage=en"
+        res = await client.get(url, timeout=4.0)
+        if res.status_code == 200:
+            data = res.json()
+            locality = data.get("locality") or data.get("city") or data.get("principalSubdivision") or ""
+            subdivision = data.get("principalSubdivision") or ""
+            country = data.get("countryName") or ""
+            
+            parts = [p for p in [locality, subdivision, country] if p]
+            clean_parts = []
+            for p in parts:
+                if not clean_parts or clean_parts[-1].lower() != p.lower():
+                    clean_parts.append(p)
+            
+            if clean_parts:
+                return ", ".join(clean_parts[:2])
+    except Exception:
+        pass
+
+    # Fallback to geographical bounding checks
+    if 19.5 <= lat <= 20.2 and 85.5 <= lng <= 86.5:
+        return "Puri Coast, Odisha"
+    elif 12.8 <= lat <= 13.3 and 80.0 <= lng <= 80.5:
+        return "Chennai Coast, Tamil Nadu"
+    elif 18.7 <= lat <= 19.4 and 72.6 <= lng <= 73.2:
+        return "Mumbai Coast, Maharashtra"
+    elif 17.5 <= lat <= 18.0 and 83.0 <= lng <= 83.5:
+        return "Visakhapatnam, Andhra Pradesh"
+    elif 22.2 <= lat <= 22.8 and 88.1 <= lng <= 88.6:
+        return "Kolkata Delta, West Bengal"
+    elif 10.0 <= lat <= 23.0 and 80.0 <= lng <= 93.0:
+        return "Bay of Bengal Offshore Sector"
+    elif 8.0 <= lat <= 24.0 and 65.0 <= lng <= 75.0:
+        return "Arabian Sea Offshore Sector"
+    
+    return f"Sector ({round(lat, 3)}°N, {round(lng, 3)}°E)"
 
 class OpenMeteoService:
     async def fetch_live_telemetry(
@@ -68,6 +110,7 @@ class OpenMeteoService:
                 response = await client.get(OPEN_METEO_BASE_URL, params=params)
                 response.raise_for_status()
                 data = response.json()
+                resolved_name = await reverse_geocode_location(lat, lng, client)
         except Exception:
             return self._build_fallback(lat, lng, location_name)
 
@@ -98,7 +141,7 @@ class OpenMeteoService:
 
         hazard = HazardTelemetry(
             id=f"LIVE-METEO-{datetime.utcnow().strftime('%Y%m%d%H')}",
-            name=f"Live Weather ({location_name})",
+            name=f"Live Weather ({resolved_name or location_name})",
             category=category,
             hazard_type="Live Open-Meteo Real-Time Telemetry",
             center_coordinates=Coordinates(lat=lat, lng=lng),
@@ -118,6 +161,7 @@ class OpenMeteoService:
             "source": "Open-Meteo Live API",
             "is_live": True,
             "hazard_telemetry": hazard,
+            "location_name": resolved_name,
             "soil_saturation_percent": round(soil_saturation_pct, 1),
             "temperature_c": current.get("temperature_2m"),
             "wind_direction_deg": wind_dir_deg,
@@ -126,7 +170,7 @@ class OpenMeteoService:
 
     async def fetch_point_telemetry(self, lat: float, lng: float) -> Dict[str, Any]:
         """
-        Fetches pinpoint real-time weather & computed flood risk for any clicked GPS coordinate.
+        Fetches pinpoint real-time weather & reverse-geocoded place name for any clicked GPS coordinate.
         """
         params = {
             "latitude": lat,
@@ -150,16 +194,20 @@ class OpenMeteoService:
             "timezone": "auto"
         }
 
+        resolved_name = f"Location ({round(lat, 3)}°N, {round(lng, 3)}°E)"
+
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.get(OPEN_METEO_BASE_URL, params=params)
                 res.raise_for_status()
                 data = res.json()
-        except Exception as e:
+                resolved_name = await reverse_geocode_location(lat, lng, client)
+        except Exception:
             # Fallback localized data
             return {
                 "latitude": lat,
                 "longitude": lng,
+                "location_name": resolved_name,
                 "temperature_c": 28.5,
                 "humidity_percent": 82.0,
                 "rainfall_rate_mm_hr": 12.0,
@@ -210,6 +258,7 @@ class OpenMeteoService:
         return {
             "latitude": lat,
             "longitude": lng,
+            "location_name": resolved_name,
             "temperature_c": round(temp, 1),
             "humidity_percent": round(humidity, 1),
             "rainfall_rate_mm_hr": round(rain_rate, 1),
@@ -271,4 +320,4 @@ class OpenMeteoService:
             pressure_hpa=992.0,
             status="LIVE_FEED"
         )
-        return {"source": "Open-Meteo Cache", "is_live": True, "hazard_telemetry": hazard}
+        return {"source": "Open-Meteo Cache", "is_live": True, "hazard_telemetry": hazard, "location_name": name}

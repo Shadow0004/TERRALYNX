@@ -165,68 +165,6 @@ export const App: React.FC = () => {
         resourceShortfallsCount={resourceShortfallsCount}
       />
 
-      {/* Live Open-Meteo Telemetry Status Banner */}
-      {isLiveFeed && state && (
-        <div className="bg-emerald-950/70 border-b border-emerald-500/40 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-2.5">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span className="font-mono font-bold text-emerald-300">
-              OPEN-METEO LIVE TELEMETRY ACTIVE:
-            </span>
-            <span className="text-emerald-100 font-semibold">
-              {state.hazard.name}
-            </span>
-            <span className="text-emerald-400 font-mono">
-              (Rain 24h: {state.hazard.total_24h_rainfall_mm}mm • Wind Gusts: {state.hazard.wind_gusts_kmh}km/h • Pressure: {state.hazard.pressure_hpa}hPa)
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-[11px] text-emerald-400 font-mono">Switch Sector:</span>
-            <button
-              onClick={() => handleFetchLiveWeather(19.8135, 85.8312, 'Purva Coast (Puri)')}
-              className="px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40 font-mono text-[11px] transition-colors"
-            >
-              Puri Coast
-            </button>
-            <button
-              onClick={() => handleFetchLiveWeather(13.0827, 80.2707, 'Chennai Coastal Sector')}
-              className="px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40 font-mono text-[11px] transition-colors"
-            >
-              Chennai
-            </button>
-            <button
-              onClick={() => handleFetchLiveWeather(18.9220, 72.8347, 'Mumbai Coastal Sector')}
-              className="px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40 font-mono text-[11px] transition-colors"
-            >
-              Mumbai
-            </button>
-            <button
-              onClick={() => handleFetchLiveWeather(17.6868, 83.2185, 'Visakhapatnam Harbor')}
-              className="px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40 font-mono text-[11px] transition-colors"
-            >
-              Vizag
-            </button>
-            <button
-              onClick={() => handleFetchLiveWeather(22.5726, 88.3639, 'Sundarbans Delta (Kolkata)')}
-              className="px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40 font-mono text-[11px] transition-colors"
-            >
-              Kolkata
-            </button>
-            <button
-              onClick={handleResetSimulation}
-              className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 font-mono text-[11px] transition-colors"
-              title="Return to baseline simulated Cyclone Varuna"
-            >
-              ✕ Return to Demo
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 3. Main Operational Content Body */}
       <main className="flex-1 p-4 max-w-[1600px] w-full mx-auto">
         {state && (

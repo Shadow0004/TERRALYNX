@@ -10,6 +10,7 @@ import {
   Target,
   ArrowUp,
   Radio,
+  MapPin,
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
@@ -18,6 +19,7 @@ import { apiService } from '../../services/api';
 export interface PointData {
   latitude: number;
   longitude: number;
+  location_name?: string;
   temperature_c: number;
   humidity_percent: number;
   rainfall_rate_mm_hr: number;
@@ -96,29 +98,31 @@ export const PointInspectorPopup: React.FC<PointInspectorPopupProps> = ({
   const currentTier = data ? tierColors[data.risk_tier] || tierColors.WATCH : tierColors.WATCH;
 
   return (
-    <div className="bg-[#0e1322]/95 border border-[#23304d] rounded-xl p-4 shadow-2xl backdrop-blur-md text-xs w-80 text-slate-200 select-none relative animate-in fade-in zoom-in-95 duration-150">
-      {/* Header */}
+    <div className="bg-[#0e1322]/95 border border-[#23304d] rounded-xl p-4 shadow-2xl backdrop-blur-md text-xs w-84 text-slate-200 select-none relative animate-in fade-in zoom-in-95 duration-150">
+      {/* Header with Location Name */}
       <div className="flex items-start justify-between border-b border-[#1b253b] pb-2.5 mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
-            <Target className="w-4 h-4 animate-pulse" />
+        <div className="flex items-start space-x-2.5">
+          <div className="p-1.5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 mt-0.5">
+            <MapPin className="w-4 h-4 animate-bounce" />
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-white font-mono text-[13px]">PINPOINT TELEMETRY</span>
+              <span className="font-bold text-white font-mono text-[14px] leading-tight">
+                {data?.location_name || `Lat: ${lat.toFixed(3)}°, Lng: ${lng.toFixed(3)}°`}
+              </span>
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 font-mono">
-              {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
+            <div className="text-[10px] text-cyan-400 font-mono mt-0.5">
+              GPS: {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
             </div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition-colors"
+          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition-colors ml-2"
         >
           <X className="w-4 h-4" />
         </button>
