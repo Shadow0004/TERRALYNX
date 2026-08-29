@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { Zone, Shelter, Hospital, RoadSegment, EvacuationRoute, ShelterAllocationItem } from '../../types';
-import { MapLegend } from './MapLegend';
+import { Zone, Shelter, Hospital, RoadSegment, EvacuationRoute, ShelterAllocationItem, HazardTelemetry } from '../../types';
+import { MapLegend, BasemapType } from './MapLegend';
 import { ZonePopup } from './ZonePopup';
+import { WindStreamOverlay } from './WindStreamOverlay';
 
 interface RiskMapProps {
   zones: Zone[];
@@ -11,7 +12,23 @@ interface RiskMapProps {
   roads: RoadSegment[];
   routes: EvacuationRoute[];
   allocations: ShelterAllocationItem[];
+  hazard?: HazardTelemetry;
 }
+
+const BASEMAP_TILES: Record<BasemapType, { url: string; attribution: string }> = {
+  'google-hybrid': {
+    url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    attribution: '© Google Maps Satellite Hybrid',
+  },
+  'google-terrain': {
+    url: 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+    attribution: '© Google Maps Terrain',
+  },
+  'dark': {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri Dark Canvas, OpenStreetMap',
+  },
+};
 
 export const RiskMap: React.FC<RiskMapProps> = ({
   zones,
@@ -20,19 +37,29 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   roads,
   routes,
   allocations,
+  hazard,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const cycloneMarkerRef = useRef<maplibregl.Marker[]>([]);
 
+  const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
+  const [basemap, setBasemap] = useState<BasemapType>('google-hybrid');
   const [showZones, setShowZones] = useState<boolean>(true);
   const [showRoads, setShowRoads] = useState<boolean>(true);
   const [showShelters, setShowShelters] = useState<boolean>(true);
   const [showRoutes, setShowRoutes] = useState<boolean>(true);
   const [showRadar, setShowRadar] = useState<boolean>(true);
+  const [showWindStreams, setShowWindStreams] = useState<boolean>(true);
 
-  // Initialize MapLibre GL map
+  const stormLngLat: [number, number] = [
+    hazard?.center_coordinates.lng || 85.95,
+    hazard?.center_coordinates.lat || 19.75,
+  ];
+
+  // Initialize MapLibre GL map with Google Hybrid basemap
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -41,30 +68,26 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       style: {
         version: 8,
         sources: {
-          'osm-tiles': {
+          'basemap-source': {
             type: 'raster',
-            tiles: [
-              'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-            ],
+            tiles: [BASEMAP_TILES['google-hybrid'].url],
             tileSize: 256,
-            attribution: '© Esri, OpenStreetMap contributors',
+            attribution: BASEMAP_TILES['google-hybrid'].attribution,
           },
           'radar-tiles': {
             type: 'raster',
-            tiles: [
-              'https://tilecache.rainviewer.com/v2/radar/now/256/{z}/{x}/{y}/2/1_1.png',
-            ],
+            tiles: ['https://tilecache.rainviewer.com/v2/radar/now/256/{z}/{x}/{y}/2/1_1.png'],
             tileSize: 256,
             attribution: '© RainViewer Live Doppler Radar',
           },
         },
         layers: [
           {
-            id: 'osm-layer',
+            id: 'basemap-layer',
             type: 'raster',
-            source: 'osm-tiles',
+            source: 'basemap-source',
             minzoom: 0,
-            maxzoom: 19,
+            maxzoom: 20,
           },
           {
             id: 'radar-layer',
@@ -80,11 +103,13 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       },
       center: [85.8312, 19.8135], // Center of Purva Coastal District
       zoom: 10.8,
-      pitch: 30, // 3D oblique tilt for situational awareness
+      pitch: 35, // Oblique 3D perspective
+      bearing: -5,
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     mapRef.current = map;
+    setMapInstance(map);
 
     map.on('load', () => {
       // 1. Add Zone Polygons GeoJSON Source & Layers
@@ -111,7 +136,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         data: zoneGeoJSON,
       });
 
-      // Fill layer
+      // Zone fill layer with tactical alpha
       map.addLayer({
         id: 'zones-fill',
         type: 'fill',
@@ -126,11 +151,11 @@ export const RiskMap: React.FC<RiskMapProps> = ({
             'SAFE', '#10b981',
             '#64748b',
           ],
-          'fill-opacity': 0.35,
+          'fill-opacity': 0.42,
         },
       });
 
-      // Outline layer
+      // Glowing outline layer
       map.addLayer({
         id: 'zones-outline',
         type: 'line',
@@ -139,14 +164,14 @@ export const RiskMap: React.FC<RiskMapProps> = ({
           'line-color': [
             'match',
             ['get', 'risk_level'],
-            'CRITICAL', '#dc2626',
-            'HIGH', '#ea580c',
-            'WATCH', '#ca8a04',
-            'SAFE', '#059669',
-            '#475569',
+            'CRITICAL', '#ff2222',
+            'HIGH', '#ff7a00',
+            'WATCH', '#ffd000',
+            'SAFE', '#00e599',
+            '#94a3b8',
           ],
-          'line-width': 2.2,
-          'line-opacity': 0.85,
+          'line-width': 2.8,
+          'line-opacity': 0.95,
         },
       });
 
@@ -168,7 +193,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         map.getCanvas().style.cursor = '';
       });
 
-      // 2. Add Road Network GeoJSON Source & Layer
+      // 2. Road Network Layer
       const roadGeoJSON: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: roads.map((r) => ({
@@ -210,7 +235,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         },
       });
 
-      // 3. Add Evacuation Routes Layer
+      // 3. Evacuation Corridors Layer
       const routeGeoJSON: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: routes.map((rt) => ({
@@ -238,10 +263,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         type: 'line',
         source: 'routes-source',
         paint: {
-          'line-color': '#06b6d4',
-          'line-width': 2.5,
+          'line-color': '#00f0ff',
+          'line-width': 2.8,
           'line-dasharray': [2, 2],
-          'line-opacity': 0.75,
+          'line-opacity': 0.85,
         },
       });
     });
@@ -251,7 +276,40 @@ export const RiskMap: React.FC<RiskMapProps> = ({
     };
   }, []);
 
-  // Update GeoJSON data when state changes
+  // Handle Basemap switching dynamically
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const source = map.getSource('basemap-source') as maplibregl.RasterTileSource;
+    if (source && (source as any).tiles) {
+      const tileUrl = BASEMAP_TILES[basemap].url;
+      map.removeLayer('basemap-layer');
+      map.removeSource('basemap-source');
+
+      map.addSource('basemap-source', {
+        type: 'raster',
+        tiles: [tileUrl],
+        tileSize: 256,
+        attribution: BASEMAP_TILES[basemap].attribution,
+      });
+
+      // Insert basemap as base layer
+      const firstLayerId = map.getStyle().layers[0]?.id;
+      map.addLayer(
+        {
+          id: 'basemap-layer',
+          type: 'raster',
+          source: 'basemap-source',
+          minzoom: 0,
+          maxzoom: 20,
+        },
+        firstLayerId
+      );
+    }
+  }, [basemap]);
+
+  // Update GeoJSON & Markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
@@ -320,7 +378,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       });
     }
 
-    // Update markers (Shelters & Hospitals)
+    // Update Shelter Markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -328,11 +386,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       shelters.forEach((s) => {
         const el = document.createElement('div');
         el.className = 'shelter-marker-pin cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group';
-
         const utilColor = s.is_overloaded ? 'bg-red-500' : s.utilization_percentage > 85 ? 'bg-amber-500' : 'bg-indigo-600';
 
         el.innerHTML = `
-          <div class="relative flex items-center justify-center w-7 h-7 rounded-full ${utilColor} border-2 border-white shadow-xl">
+          <div class="relative flex items-center justify-center w-7 h-7 rounded-full ${utilColor} border-2 border-white shadow-2xl">
             <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
             <span class="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold bg-[#0b0f19] text-slate-100 px-1 rounded-full border border-slate-700">
               ${s.utilization_percentage.toFixed(0)}%
@@ -341,7 +398,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         `;
 
         const popup = new maplibregl.Popup({ offset: 15 }).setHTML(`
-          <div class="text-xs space-y-1">
+          <div class="text-xs space-y-1 bg-[#0f1422] p-1 rounded">
             <div class="font-bold text-white font-mono">${s.name}</div>
             <div class="text-slate-300">Cap: <span class="text-white font-mono font-semibold">${s.total_capacity.toLocaleString()}</span> | Projected Occ: <span class="text-cyan-400 font-mono font-semibold">${s.projected_total_occupancy.toLocaleString()}</span></div>
             <div class="text-[10px] text-slate-400">Elevation: ${s.elevation_meters}m • Safety: ${s.safety_score}%</div>
@@ -356,7 +413,29 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         markersRef.current.push(marker);
       });
     }
-  }, [zones, shelters, hospitals, roads, routes, showShelters]);
+
+    // Cyclone Eye Tracker Marker with Pulsating Concentric Rings
+    cycloneMarkerRef.current.forEach((m) => m.remove());
+    cycloneMarkerRef.current = [];
+
+    const cycloneEl = document.createElement('div');
+    cycloneEl.className = 'cyclone-eye-marker flex items-center justify-center';
+    cycloneEl.innerHTML = `
+      <div class="relative flex items-center justify-center">
+        <div class="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 animate-ping absolute"></div>
+        <div class="w-24 h-24 rounded-full bg-red-600/10 border border-red-400/40 animate-pulse absolute"></div>
+        <div class="relative w-8 h-8 rounded-full bg-red-950 border-2 border-red-400 text-red-300 flex items-center justify-center shadow-2xl font-mono text-[10px] font-bold">
+          🌀 ${hazard?.category ? `C${hazard.category}` : 'EYE'}
+        </div>
+      </div>
+    `;
+
+    const cycloneMarker = new maplibregl.Marker({ element: cycloneEl })
+      .setLngLat(stormLngLat)
+      .addTo(map);
+
+    cycloneMarkerRef.current.push(cycloneMarker);
+  }, [zones, shelters, hospitals, roads, routes, showShelters, hazard]);
 
   // Handle Layer Visibility Toggles
   useEffect(() => {
@@ -383,8 +462,17 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full" />
 
+      {/* Earth.NullSchool Wind Stream Particle Canvas Layer */}
+      <WindStreamOverlay
+        map={mapInstance}
+        centerLngLat={stormLngLat}
+        windSpeedKmh={hazard?.wind_speed_kmh || 85.0}
+        windDirection={hazard?.movement_direction || 'NW'}
+        isActive={showWindStreams}
+      />
+
       {/* Floating Map Legend & Layer Controls */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-20">
         <MapLegend
           showZones={showZones}
           setShowZones={setShowZones}
@@ -396,12 +484,16 @@ export const RiskMap: React.FC<RiskMapProps> = ({
           setShowRoutes={setShowRoutes}
           showRadar={showRadar}
           setShowRadar={setShowRadar}
+          showWindStreams={showWindStreams}
+          setShowWindStreams={setShowWindStreams}
+          basemap={basemap}
+          setBasemap={setBasemap}
         />
       </div>
 
       {/* Floating Selected Zone Popup Card */}
       {selectedZone && (
-        <div className="absolute bottom-4 right-4 z-20">
+        <div className="absolute bottom-4 right-4 z-30">
           <ZonePopup
             zone={selectedZone}
             shelters={shelters}
@@ -413,8 +505,8 @@ export const RiskMap: React.FC<RiskMapProps> = ({
 
       {/* Quick Instructional Pill */}
       {!selectedZone && (
-        <div className="absolute bottom-4 left-4 z-10 bg-[#0f1422]/90 border border-[#212b40] rounded-lg px-3 py-1.5 text-xs text-slate-400 font-mono shadow-md">
-          💡 Click any zone polygon for localized flood exposure & shelter routing drilldown
+        <div className="absolute bottom-4 left-4 z-20 bg-[#0f1422]/90 border border-[#212b40] rounded-lg px-3 py-1.5 text-xs text-slate-300 font-mono shadow-xl backdrop-blur">
+          💡 Click any risk polygon for localized flood exposure & shelter routing drilldown
         </div>
       )}
     </div>

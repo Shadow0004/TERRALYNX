@@ -28,8 +28,7 @@ def get_initial_hazard_telemetry() -> HazardTelemetry:
     )
 
 def get_seed_zones() -> List[Zone]:
-    """Generates 10 coherent administrative zones for Purva Coastal District."""
-    # Base district center: lat 19.81, lng 85.83
+    """Generates 10 coherent, geographically realistic administrative zones for Purva Coastal District."""
     return [
         Zone(
             id="ZONE-01",
@@ -39,8 +38,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=34.5,
             center=Coordinates(lat=19.782, lng=85.875),
             polygon_coordinates=[
-                [85.850, 19.760], [85.900, 19.760], [85.910, 19.805],
-                [85.860, 19.805], [85.850, 19.760]
+                [85.842, 19.760], [85.878, 19.752], [85.905, 19.768],
+                [85.918, 19.795], [85.895, 19.815], [85.860, 19.810],
+                [85.845, 19.785], [85.842, 19.760]
             ],
             topography=Topography(
                 elevation_meters=1.2,
@@ -66,8 +66,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=22.0,
             center=Coordinates(lat=19.755, lng=85.845),
             polygon_coordinates=[
-                [85.820, 19.735], [85.870, 19.735], [85.870, 19.775],
-                [85.820, 19.775], [85.820, 19.735]
+                [85.815, 19.735], [85.852, 19.728], [85.878, 19.752],
+                [85.865, 19.780], [85.830, 19.782], [85.815, 19.758],
+                [85.815, 19.735]
             ],
             topography=Topography(
                 elevation_meters=1.8,
@@ -93,8 +94,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=18.5,
             center=Coordinates(lat=19.730, lng=85.890),
             polygon_coordinates=[
-                [85.865, 19.710], [85.920, 19.710], [85.915, 19.750],
-                [85.860, 19.750], [85.865, 19.710]
+                [85.855, 19.708], [85.895, 19.702], [85.928, 19.725],
+                [85.922, 19.755], [85.882, 19.752], [85.855, 19.732],
+                [85.855, 19.708]
             ],
             topography=Topography(
                 elevation_meters=0.9,
@@ -120,8 +122,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=42.0,
             center=Coordinates(lat=19.815, lng=85.895),
             polygon_coordinates=[
-                [85.865, 19.790], [85.930, 19.790], [85.930, 19.840],
-                [85.865, 19.840], [85.865, 19.790]
+                [85.860, 19.790], [85.898, 19.788], [85.935, 19.805],
+                [85.938, 19.845], [85.890, 19.848], [85.862, 19.822],
+                [85.860, 19.790]
             ],
             topography=Topography(
                 elevation_meters=2.3,
@@ -147,8 +150,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=28.0,
             center=Coordinates(lat=19.810, lng=85.825),
             polygon_coordinates=[
-                [85.795, 19.785], [85.855, 19.785], [85.855, 19.835],
-                [85.795, 19.835], [85.795, 19.785]
+                [85.790, 19.782], [85.842, 19.782], [85.862, 19.812],
+                [85.850, 19.840], [85.805, 19.842], [85.788, 19.815],
+                [85.790, 19.782]
             ],
             topography=Topography(
                 elevation_meters=5.6,
@@ -174,8 +178,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=48.0,
             center=Coordinates(lat=19.870, lng=85.880),
             polygon_coordinates=[
-                [85.840, 19.840], [85.920, 19.840], [85.920, 19.900],
-                [85.840, 19.900], [85.840, 19.840]
+                [85.835, 19.840], [85.895, 19.838], [85.928, 19.860],
+                [85.925, 19.905], [85.865, 19.908], [85.832, 19.875],
+                [85.835, 19.840]
             ],
             topography=Topography(
                 elevation_meters=7.8,
@@ -201,8 +206,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=36.0,
             center=Coordinates(lat=19.780, lng=85.760),
             polygon_coordinates=[
-                [85.730, 19.750], [85.790, 19.750], [85.790, 19.810],
-                [85.730, 19.810], [85.730, 19.750]
+                [85.725, 19.748], [85.778, 19.745], [85.795, 19.780],
+                [85.788, 19.815], [85.742, 19.818], [85.720, 19.785],
+                [85.725, 19.748]
             ],
             topography=Topography(
                 elevation_meters=9.5,
@@ -228,8 +234,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=31.0,
             center=Coordinates(lat=19.855, lng=85.805),
             polygon_coordinates=[
-                [85.770, 19.825], [85.840, 19.825], [85.840, 19.885],
-                [85.770, 19.885], [85.770, 19.825]
+                [85.768, 19.825], [85.828, 19.822], [85.845, 19.855],
+                [85.840, 19.890], [85.788, 19.892], [85.765, 19.860],
+                [85.768, 19.825]
             ],
             topography=Topography(
                 elevation_meters=16.8,
@@ -255,8 +262,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=45.0,
             center=Coordinates(lat=19.860, lng=85.730),
             polygon_coordinates=[
-                [85.690, 19.820], [85.770, 19.820], [85.770, 19.900],
-                [85.690, 19.900], [85.690, 19.820]
+                [85.685, 19.818], [85.758, 19.815], [85.775, 19.858],
+                [85.768, 19.905], [85.710, 19.908], [85.680, 19.865],
+                [85.685, 19.818]
             ],
             topography=Topography(
                 elevation_meters=24.5,
@@ -282,8 +290,9 @@ def get_seed_zones() -> List[Zone]:
             area_sq_km=30.0,
             center=Coordinates(lat=19.715, lng=85.810),
             polygon_coordinates=[
-                [85.780, 19.680], [85.840, 19.680], [85.840, 19.740],
-                [85.780, 19.740], [85.780, 19.680]
+                [85.775, 19.675], [85.828, 19.670], [85.852, 19.708],
+                [85.845, 19.742], [85.798, 19.745], [85.772, 19.715],
+                [85.775, 19.675]
             ],
             topography=Topography(
                 elevation_meters=1.3,

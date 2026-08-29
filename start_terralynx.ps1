@@ -6,7 +6,7 @@ Write-Host "============================================================" -Foreg
 
 # 1. Start Backend in separate window
 Write-Host "[1/2] Starting FastAPI Backend on http://localhost:8000 ..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd d:\TERRALYNX; .\venv\Scripts\python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd d:\TERRALYNX; python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 # Wait 2 seconds for backend init
 Start-Sleep -Seconds 2

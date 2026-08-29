@@ -6,7 +6,7 @@ echo    Predict. Prepare. Protect.
 echo ============================================================
 
 echo [1/2] Starting FastAPI Backend on http://localhost:8000 ...
-start "TerraLynx Backend" powershell -NoExit -Command "cd d:\TERRALYNX; .\venv\Scripts\python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+start "TerraLynx Backend" powershell -NoExit -Command "cd d:\TERRALYNX; python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 timeout /t 2 /nobreak >nul
 

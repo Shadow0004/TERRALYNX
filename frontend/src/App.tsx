@@ -248,6 +248,7 @@ export const App: React.FC = () => {
                 roads={state.roads}
                 routes={state.routes}
                 allocations={state.allocations}
+                hazard={state.hazard}
               />
             )}
 

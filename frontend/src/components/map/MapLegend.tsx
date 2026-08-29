@@ -1,6 +1,8 @@
 import React from 'react';
 import { Layers, Shield, Home, Building2, Route, AlertTriangle } from 'lucide-react';
 
+export type BasemapType = 'google-hybrid' | 'google-terrain' | 'dark';
+
 interface MapLegendProps {
   showZones: boolean;
   setShowZones: (val: boolean) => void;
@@ -12,6 +14,10 @@ interface MapLegendProps {
   setShowRoutes: (val: boolean) => void;
   showRadar: boolean;
   setShowRadar: (val: boolean) => void;
+  showWindStreams: boolean;
+  setShowWindStreams: (val: boolean) => void;
+  basemap: BasemapType;
+  setBasemap: (val: BasemapType) => void;
 }
 
 export const MapLegend: React.FC<MapLegendProps> = ({
@@ -25,6 +31,10 @@ export const MapLegend: React.FC<MapLegendProps> = ({
   setShowRoutes,
   showRadar,
   setShowRadar,
+  showWindStreams,
+  setShowWindStreams,
+  basemap,
+  setBasemap,
 }) => {
   return (
     <div className="bg-[#0f1422]/95 border border-[#212b40] rounded-xl p-3.5 shadow-2xl backdrop-blur-md text-xs space-y-3 w-64 select-none">
@@ -36,8 +46,62 @@ export const MapLegend: React.FC<MapLegendProps> = ({
         </span>
       </div>
 
+      {/* Basemap Switcher */}
+      <div className="space-y-1">
+        <div className="text-[10px] uppercase font-mono text-slate-400">Map Imagery Source</div>
+        <div className="grid grid-cols-3 gap-1">
+          <button
+            onClick={() => setBasemap('google-hybrid')}
+            className={`py-1 px-1.5 rounded font-mono text-[10px] text-center border transition-all ${
+              basemap === 'google-hybrid'
+                ? 'bg-cyan-950 text-cyan-300 border-cyan-500 font-bold'
+                : 'bg-[#141b2a] text-slate-400 border-slate-700 hover:text-white'
+            }`}
+            title="Google Maps Hybrid Satellite Imagery"
+          >
+            🛰️ GMaps Sat
+          </button>
+          <button
+            onClick={() => setBasemap('google-terrain')}
+            className={`py-1 px-1.5 rounded font-mono text-[10px] text-center border transition-all ${
+              basemap === 'google-terrain'
+                ? 'bg-cyan-950 text-cyan-300 border-cyan-500 font-bold'
+                : 'bg-[#141b2a] text-slate-400 border-slate-700 hover:text-white'
+            }`}
+            title="Google Maps Topographical Terrain"
+          >
+            🏔️ Terrain
+          </button>
+          <button
+            onClick={() => setBasemap('dark')}
+            className={`py-1 px-1.5 rounded font-mono text-[10px] text-center border transition-all ${
+              basemap === 'dark'
+                ? 'bg-cyan-950 text-cyan-300 border-cyan-500 font-bold'
+                : 'bg-[#141b2a] text-slate-400 border-slate-700 hover:text-white'
+            }`}
+            title="Dark Tactical Canvas"
+          >
+            🌑 Ops Dark
+          </button>
+        </div>
+      </div>
+
       {/* Layer Toggles */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 pt-2 border-t border-[#1b2334]">
+        {/* NullSchool Wind Streams */}
+        <label className="flex items-center justify-between text-slate-300 hover:text-white cursor-pointer py-0.5">
+          <span className="flex items-center space-x-2">
+            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span className="text-cyan-300 font-medium">NullSchool Wind Stream</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={showWindStreams}
+            onChange={(e) => setShowWindStreams(e.target.checked)}
+            className="rounded bg-[#1a2333] border-slate-600 text-cyan-500 focus:ring-0 w-3.5 h-3.5"
+          />
+        </label>
+
         <label className="flex items-center justify-between text-slate-300 hover:text-white cursor-pointer py-0.5">
           <span className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-sm bg-red-500/80 border border-red-400"></span>
