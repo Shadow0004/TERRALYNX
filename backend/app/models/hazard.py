@@ -11,10 +11,11 @@ class Coordinates(BaseModel):
 class HazardTelemetry(BaseModel):
     id: str = "CYC-VARUNA-2026"
     name: str = "Cyclone Varuna"
-    category: int = Field(default=3, ge=1, le=5, description="Saffir-Simpson or IMD Cyclone Category")
+    category: int = Field(default=3, ge=0, le=5, description="Saffir-Simpson or IMD Cyclone Category (0 = Depression/Meteo)")
     hazard_type: str = "Tropical Cyclone & Extreme Precipitation"
     center_coordinates: Coordinates = Coordinates(lat=19.45, lng=86.20)
-    landfall_eta_hours: float = Field(default=4.5, description="Estimated hours to coastal landfall")
+    landfall_eta_hours: Optional[float] = Field(default=4.5, description="Estimated hours to coastal landfall (None if not cyclone)")
+    threat_level_label: Optional[str] = Field(default="CYCLONIC STORM", description="IMD Threat Classification")
     wind_speed_kmh: float = Field(default=145.0, description="Sustained wind speed in km/h")
     wind_gusts_kmh: float = Field(default=170.0, description="Peak wind gusts in km/h")
     rainfall_rate_mm_hr: float = Field(default=42.0, description="Peak precipitation rate mm/hr")

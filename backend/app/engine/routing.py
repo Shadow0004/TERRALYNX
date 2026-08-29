@@ -60,16 +60,17 @@ def assess_road_flood_risks(
         road.flood_risk_score = round(min(100.0, max(0.0, raw_flood_risk)), 1)
 
         # 3. Determine status and impassable ETA
+        eta = hazard.landfall_eta_hours if hazard.landfall_eta_hours is not None else 6.0
         if road.flood_risk_score >= 70.0:
             road.is_flooded = True
             road.status = "FLOODED_CLOSED"
             road.recommended_for_evacuation = False
-            road.estimated_time_to_impassable_mins = max(15.0, round(hazard.landfall_eta_hours * 18.0, 0))
+            road.estimated_time_to_impassable_mins = max(15.0, round(eta * 18.0, 0))
         elif road.flood_risk_score >= 42.0:
             road.is_flooded = False
             road.status = "CAUTION"
             road.recommended_for_evacuation = True
-            road.estimated_time_to_impassable_mins = max(60.0, round(hazard.landfall_eta_hours * 45.0, 0))
+            road.estimated_time_to_impassable_mins = max(60.0, round(eta * 45.0, 0))
         else:
             road.is_flooded = False
             road.status = "OPEN"

@@ -134,18 +134,44 @@ class OpenMeteoService:
 
         # Dynamic surge estimate based on pressure drop + wind
         pressure_drop = max(0.0, 1013.0 - pressure)
-        estimated_surge = round(max(0.4, (pressure_drop * 0.015) + (wind_speed * 0.012)), 2)
+        estimated_surge = round(max(0.2, (pressure_drop * 0.015) + (wind_speed * 0.012)), 2)
 
-        category = 3 if wind_gusts >= 140 else 2 if wind_gusts >= 100 else 1
+        # Standard IMD / WMO Meteorological Classification
+        if wind_speed >= 166 or wind_gusts >= 200:
+            category = 4
+            threat_label = "EXTREMELY SEVERE CYCLONE (CAT-4)"
+            landfall_eta = 2.5
+        elif wind_speed >= 118 or wind_gusts >= 150:
+            category = 3
+            threat_label = "VERY SEVERE CYCLONE (CAT-3)"
+            landfall_eta = 4.0
+        elif wind_speed >= 89 or wind_gusts >= 115:
+            category = 2
+            threat_label = "SEVERE CYCLONIC STORM (CAT-2)"
+            landfall_eta = 6.0
+        elif wind_speed >= 62 or wind_gusts >= 85:
+            category = 1
+            threat_label = "CYCLONIC STORM (CAT-1)"
+            landfall_eta = 8.0
+        elif wind_speed >= 40 or wind_gusts >= 55:
+            category = 0
+            threat_label = "DEEP DEPRESSION"
+            landfall_eta = None
+        else:
+            category = 0
+            threat_label = "LIVE METEO"
+            landfall_eta = None
+
         cardinal_dir = degrees_to_cardinal(wind_dir_deg)
 
         hazard = HazardTelemetry(
             id=f"LIVE-METEO-{datetime.utcnow().strftime('%Y%m%d%H')}",
             name=f"Live Weather ({resolved_name or location_name})",
             category=category,
+            threat_level_label=threat_label,
             hazard_type="Live Open-Meteo Real-Time Telemetry",
             center_coordinates=Coordinates(lat=lat, lng=lng),
-            landfall_eta_hours=2.0 if wind_gusts > 80 else 6.0,
+            landfall_eta_hours=landfall_eta,
             wind_speed_kmh=round(wind_speed, 1),
             wind_gusts_kmh=round(wind_gusts, 1),
             wind_direction_deg=round(wind_dir_deg, 1),

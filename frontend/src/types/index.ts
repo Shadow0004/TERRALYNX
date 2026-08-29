@@ -11,9 +11,10 @@ export interface HazardTelemetry {
   id: string;
   name: string;
   category: number;
+  threat_level_label?: string;
   hazard_type: string;
   center_coordinates: Coordinates;
-  landfall_eta_hours: number;
+  landfall_eta_hours?: number | null;
   wind_speed_kmh: number;
   wind_gusts_kmh: number;
   rainfall_rate_mm_hr: number;

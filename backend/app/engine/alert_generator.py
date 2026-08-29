@@ -98,16 +98,20 @@ def generate_operational_alerts(
             trigger_metric="Utilization percentage >= 85.0%"
         ))
 
-    # 5. Cyclone Telemetry Watch Alert
+    # 5. Cyclone / Meteorological Watch Alert
+    eta_text = f"Coastal landfall estimated in {hazard.landfall_eta_hours:.1f} hours." if hazard.landfall_eta_hours is not None else "Active precipitation and localized inundation watch."
+    metric_text = f"Landfall ETA = {hazard.landfall_eta_hours:.1f}h" if hazard.landfall_eta_hours is not None else "Real-Time Telemetry Feed"
+    
+    cat_text = f"(Category {hazard.category})" if hazard.category >= 1 else f"({hazard.threat_level_label or 'LIVE METEO'})"
     alerts.append(EmergencyAlert(
         id=f"ALT-HAZ-WATCH-{len(alerts)+1}",
         timestamp=now_str,
         tier="WATCH",
-        title=f"HAZARD TRACK: {hazard.name} (Category {hazard.category})",
-        message=f"Sustained winds of {hazard.wind_speed_kmh:.0f} km/h with gusts to {hazard.wind_gusts_kmh:.0f} km/h. Coastal landfall estimated in {hazard.landfall_eta_hours:.1f} hours.",
+        title=f"HAZARD TRACK: {hazard.name} {cat_text}",
+        message=f"Sustained winds of {hazard.wind_speed_kmh:.0f} km/h with gusts to {hazard.wind_gusts_kmh:.0f} km/h. {eta_text}",
         target_zone_ids=[z.id for z in zones],
-        action_required="Ensure emergency generator fuel supplies and satellite communication links active.",
-        trigger_metric=f"Landfall ETA = {hazard.landfall_eta_hours:.1f}h"
+        action_required="Ensure emergency generator fuel supplies and communication links active.",
+        trigger_metric=metric_text
     ))
 
     # Sort alerts by severity tier

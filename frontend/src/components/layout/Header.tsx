@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, AlertTriangle, RefreshCw, Radio, Compass } from 'lucide-react';
+import { Shield, AlertTriangle, RefreshCw, Radio, Compass, CloudRain, Wind } from 'lucide-react';
 import { DistrictState } from '../../types';
 
 interface HeaderProps {
@@ -30,6 +30,10 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const isSimulationActive = state?.simulation_diff?.is_simulation_active;
+  const isCyclone = (state?.hazard?.category || 0) >= 1;
+  const activeDistrictName = state?.hazard?.name
+    ? state.hazard.name.replace('Live Weather (', '').replace(')', '')
+    : 'Purva Coastal District';
 
   return (
     <header className="bg-[#0e131f] border-b border-[#1f293d] px-4 py-2.5 flex items-center justify-between sticky top-0 z-50">
@@ -57,22 +61,53 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Active Threat Center Pill */}
+      {/* Dynamic Active Threat Center Pill */}
       {state && (
         <div className="hidden md:flex items-center space-x-3 bg-[#141b2a] border border-[#232f48] rounded-full px-4 py-1 text-xs">
-          <div className="flex items-center space-x-1.5 text-red-400 font-semibold font-mono">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-red-500" />
-            <span>{state.hazard.name.toUpperCase()} (CAT-{state.hazard.category})</span>
+          <div
+            className={`flex items-center space-x-1.5 font-semibold font-mono ${
+              isCyclone ? 'text-red-400' : 'text-cyan-300'
+            }`}
+          >
+            <Radio
+              className={`w-3.5 h-3.5 animate-pulse ${
+                isCyclone ? 'text-red-500' : 'text-cyan-400'
+              }`}
+            />
+            <span>
+              {isCyclone
+                ? `${state.hazard.name.toUpperCase()} (CAT-${state.hazard.category})`
+                : `${state.hazard.name.toUpperCase()} (${state.hazard.threat_level_label || 'LIVE METEO'})`}
+            </span>
           </div>
+
           <span className="text-slate-600">|</span>
-          <div className="text-slate-300 flex items-center space-x-1">
-            <span className="text-slate-400">Landfall:</span>
-            <span className="font-mono text-amber-400 font-semibold">{state.hazard.landfall_eta_hours}h ETA</span>
-          </div>
+
+          {isCyclone && state.hazard.landfall_eta_hours ? (
+            <div className="text-slate-300 flex items-center space-x-1">
+              <span className="text-slate-400">Landfall ETA:</span>
+              <span className="font-mono text-amber-400 font-semibold">
+                {state.hazard.landfall_eta_hours}h
+              </span>
+            </div>
+          ) : (
+            <div className="text-slate-300 flex items-center space-x-1">
+              <Wind className="w-3 h-3 text-cyan-400" />
+              <span className="text-slate-400">Wind:</span>
+              <span className="font-mono text-cyan-300 font-semibold">
+                {state.hazard.wind_speed_kmh} km/h ({state.hazard.movement_direction})
+              </span>
+            </div>
+          )}
+
           <span className="text-slate-600">|</span>
+
           <div className="text-slate-300 flex items-center space-x-1">
+            <CloudRain className="w-3 h-3 text-cyan-400" />
             <span className="text-slate-400">Rain 24h:</span>
-            <span className="font-mono text-cyan-400 font-semibold">{state.hazard.total_24h_rainfall_mm}mm</span>
+            <span className="font-mono text-cyan-400 font-semibold">
+              {state.hazard.total_24h_rainfall_mm}mm
+            </span>
           </div>
         </div>
       )}
@@ -93,10 +128,18 @@ export const Header: React.FC<HeaderProps> = ({
           {isSimulating ? (
             <RefreshCw className="w-3 h-3 text-emerald-400 animate-spin" />
           ) : (
-            <span className={`h-2 w-2 rounded-full ${isLiveFeed ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400'}`}></span>
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isLiveFeed ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400'
+              }`}
+            ></span>
           )}
           <span className="font-bold">
-            {isSimulating ? 'FETCHING METEO...' : isLiveFeed ? 'LIVE METEO ACTIVE' : '⚡ FETCH LIVE METEO'}
+            {isSimulating
+              ? 'FETCHING METEO...'
+              : isLiveFeed
+              ? 'LIVE METEO ACTIVE'
+              : '⚡ FETCH LIVE METEO'}
           </span>
         </button>
 
@@ -118,14 +161,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* Operational Clock */}
+        {/* Operational Clock & Dynamic District Name */}
         <div className="hidden sm:flex flex-col items-end text-right">
           <span className="font-mono text-xs text-cyan-400 font-semibold tracking-wider">
             {time}
           </span>
-          <span className="text-[10px] text-slate-400 flex items-center space-x-1">
-            <Compass className="w-3 h-3 text-slate-400" />
-            <span>Purva Coastal District</span>
+          <span className="text-[10px] text-slate-400 flex items-center space-x-1 truncate max-w-[170px]">
+            <Compass className="w-3 h-3 text-slate-400 shrink-0" />
+            <span className="truncate">{activeDistrictName}</span>
           </span>
         </div>
       </div>
