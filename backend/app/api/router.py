@@ -125,7 +125,15 @@ async def get_live_weather_scenario(
     _current_state = scenario_service.run_pipeline(SimulationOverrides())
     return _current_state
 
-@router.get("/weather/radar")
+from pydantic import BaseModel
+
+class RadarLayerResponse(BaseModel):
+    available: bool
+    timestamp: Optional[int] = None
+    tile_url: Optional[str] = None
+    attribution: str = ""
+
+@router.get("/weather/radar", response_model=RadarLayerResponse)
 async def get_live_radar_tiles():
     """
     Fetches live RainViewer Doppler radar timestamp and tile template.

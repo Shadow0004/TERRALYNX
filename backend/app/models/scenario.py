@@ -69,7 +69,7 @@ class DistrictState(BaseModel):
     temporary_shelter_candidates: List[TemporaryShelterCandidate]
     kpis: OperationalKPIs
     simulation_diff: Optional[SimulationComparisonDiff] = None
-    overrides_applied: SimulationOverrides = SimulationOverrides()
+    overrides_applied: SimulationOverrides = Field(default_factory=SimulationOverrides)
 
 class AIQueryRequest(BaseModel):
     query: str
