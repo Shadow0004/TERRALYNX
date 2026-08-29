@@ -72,4 +72,12 @@ export const apiService = {
     }
     return res.json();
   },
+
+  async fetchPointTelemetry(lat: number, lng: number): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/weather/point?lat=${lat}&lng=${lng}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch point telemetry: ${res.statusText}`);
+    }
+    return res.json();
+  },
 };

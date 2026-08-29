@@ -249,6 +249,9 @@ export const App: React.FC = () => {
                 routes={state.routes}
                 allocations={state.allocations}
                 hazard={state.hazard}
+                onSetSimulationFocus={(lat, lng) =>
+                  handleFetchLiveWeather(lat, lng, `Pinpoint Sector (${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E)`)
+                }
               />
             )}
 

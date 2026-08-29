@@ -22,5 +22,6 @@ class HazardTelemetry(BaseModel):
     storm_surge_meters: float = Field(default=1.8, description="Peak coastal storm surge height in meters")
     movement_speed_kmh: float = Field(default=18.0, description="Storm translation speed in km/h")
     movement_direction: str = "NW"
+    wind_direction_deg: float = Field(default=135.0, description="Meteorological wind direction in degrees (0-360)")
     pressure_hpa: float = 964.0
-    status: str = "APPROACHING" # APPROACHING, LANDFALL_ACTIVE, RECDEDING
+    status: str = "APPROACHING" # APPROACHING, LANDFALL_ACTIVE, RECDEDING, LIVE_FEED

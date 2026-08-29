@@ -5,7 +5,8 @@ interface WindStreamOverlayProps {
   map: maplibregl.Map | null;
   centerLngLat: [number, number]; // [lng, lat] of cyclone center or focus
   windSpeedKmh: number;
-  windDirection: string;
+  windDirectionDeg?: number;
+  windDirection?: string;
   isActive: boolean;
 }
 
@@ -21,6 +22,7 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
   map,
   centerLngLat,
   windSpeedKmh,
+  windDirectionDeg = 135.0,
   isActive,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -50,25 +52,29 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
     map.on('resize', resizeCanvas);
 
     // Particle settings
-    const NUM_PARTICLES = 750;
+    const NUM_PARTICLES = Math.min(1000, Math.max(400, Math.floor(windSpeedKmh * 8)));
     const particles: Particle[] = [];
 
     const initParticle = (): Particle => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       age: Math.floor(Math.random() * 80),
-      maxAge: 60 + Math.floor(Math.random() * 60),
-      speed: 1.5 + (windSpeedKmh / 40.0) * (0.8 + Math.random() * 0.6),
+      maxAge: 40 + Math.floor(Math.random() * 50),
+      speed: 1.2 + (windSpeedKmh / 28.0) * (0.8 + Math.random() * 0.5),
     });
 
     for (let i = 0; i < NUM_PARTICLES; i++) {
       particles.push(initParticle());
     }
 
+    // Base wind direction in radians (meteorological: degree is direction wind is coming FROM)
+    // Particle flows TOWARDS (dir + 180 deg)
+    const baseWindRad = ((windDirectionDeg + 180) * Math.PI) / 180.0;
+
     // Animation Loop
     const render = () => {
-      // Nullschool fading trail effect
-      ctx.fillStyle = 'rgba(10, 15, 26, 0.08)';
+      // Nullschool streak fading trail
+      ctx.fillStyle = 'rgba(10, 15, 26, 0.09)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Project storm center to screen pixels
@@ -77,40 +83,45 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Compute vector from particle to cyclone center
+        // Compute vector from particle to storm center
         const dx = centerPixel.x - p.x;
         const dy = centerPixel.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Cyclonic vortex math: tangential velocity + inward radial inflow (25 deg spiral)
-        const angle = Math.atan2(dy, dx);
-        const spiralAngle = angle + (Math.PI / 2) + 0.38; // Counter-clockwise Northern Hemisphere cyclone spiral
+        // Blend uniform regional wind vector with cyclonic vortex suction
+        const vortexWeight = Math.min(1.0, 500.0 / Math.max(30.0, dist));
+        const vortexAngle = Math.atan2(dy, dx) + (Math.PI / 2) + 0.35; // Cyclonic inward spiral
 
-        // Velocity components
-        const vx = Math.cos(spiralAngle) * p.speed;
-        const vy = Math.sin(spiralAngle) * p.speed;
+        const vxVortex = Math.cos(vortexAngle);
+        const vyVortex = Math.sin(vortexAngle);
 
-        const nextX = p.x + vx;
-        const nextY = p.y + vy;
+        const vxBase = Math.sin(baseWindRad);
+        const vyBase = -Math.cos(baseWindRad);
 
-        // Draw particle trail
+        const finalVx = (vxVortex * vortexWeight + vxBase * (1.0 - vortexWeight)) * p.speed;
+        const finalVy = (vyVortex * vortexWeight + vyBase * (1.0 - vortexWeight)) * p.speed;
+
+        const nextX = p.x + finalVx;
+        const nextY = p.y + finalVy;
+
+        // Draw particle streamline
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(nextX, nextY);
 
-        // Color based on proximity / intensity (like earth.nullschool.net)
-        const intensity = Math.min(1.0, 400.0 / Math.max(50.0, dist));
-        if (intensity > 0.75) {
-          ctx.strokeStyle = `rgba(239, 68, 68, ${0.4 + intensity * 0.5})`; // Neon Red core
-          ctx.lineWidth = 1.8;
-        } else if (intensity > 0.45) {
+        // Color mapped to real-time wind speed & vortex intensity
+        const intensity = Math.min(1.0, (p.speed * 8.0) / 100.0 + vortexWeight * 0.4);
+        if (intensity > 0.8) {
+          ctx.strokeStyle = `rgba(239, 68, 68, ${0.45 + intensity * 0.5})`; // Neon Red core
+          ctx.lineWidth = 1.9;
+        } else if (intensity > 0.5) {
           ctx.strokeStyle = `rgba(245, 158, 11, ${0.4 + intensity * 0.4})`; // Amber
-          ctx.lineWidth = 1.4;
+          ctx.lineWidth = 1.5;
         } else if (intensity > 0.25) {
-          ctx.strokeStyle = `rgba(16, 185, 129, ${0.3 + intensity * 0.4})`; // Emerald
+          ctx.strokeStyle = `rgba(16, 185, 129, ${0.35 + intensity * 0.4})`; // Emerald
           ctx.lineWidth = 1.2;
         } else {
-          ctx.strokeStyle = `rgba(6, 182, 212, ${0.25 + intensity * 0.35})`; // Cyan breeze
+          ctx.strokeStyle = `rgba(6, 182, 212, ${0.3 + intensity * 0.35})`; // Cyan
           ctx.lineWidth = 1.0;
         }
 
@@ -127,7 +138,7 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
           p.x > canvas.width ||
           p.y < 0 ||
           p.y > canvas.height ||
-          dist < 15
+          dist < 12
         ) {
           particles[i] = initParticle();
         }
@@ -139,7 +150,6 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
     render();
 
     const handleMapMove = () => {
-      // Clear slightly faster during map pan
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
@@ -150,7 +160,7 @@ export const WindStreamOverlay: React.FC<WindStreamOverlayProps> = ({
       map.off('resize', resizeCanvas);
       map.off('movestart', handleMapMove);
     };
-  }, [map, centerLngLat, windSpeedKmh, isActive]);
+  }, [map, centerLngLat, windSpeedKmh, windDirectionDeg, isActive]);
 
   if (!isActive) return null;
 

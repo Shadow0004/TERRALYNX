@@ -21,6 +21,7 @@ export interface HazardTelemetry {
   storm_surge_meters: number;
   movement_speed_kmh: number;
   movement_direction: string;
+  wind_direction_deg?: number;
   pressure_hpa: number;
   status: string;
 }

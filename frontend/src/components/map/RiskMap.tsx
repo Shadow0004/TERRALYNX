@@ -4,6 +4,7 @@ import { Zone, Shelter, Hospital, RoadSegment, EvacuationRoute, ShelterAllocatio
 import { MapLegend, BasemapType } from './MapLegend';
 import { ZonePopup } from './ZonePopup';
 import { WindStreamOverlay } from './WindStreamOverlay';
+import { PointInspectorPopup } from './PointInspectorPopup';
 
 interface RiskMapProps {
   zones: Zone[];
@@ -13,6 +14,7 @@ interface RiskMapProps {
   routes: EvacuationRoute[];
   allocations: ShelterAllocationItem[];
   hazard?: HazardTelemetry;
+  onSetSimulationFocus?: (lat: number, lng: number) => void;
 }
 
 const BASEMAP_TILES: Record<BasemapType, { url: string; attribution: string }> = {
@@ -38,14 +40,17 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   routes,
   allocations,
   hazard,
+  onSetSimulationFocus,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const cycloneMarkerRef = useRef<maplibregl.Marker[]>([]);
+  const pinpointMarkerRef = useRef<maplibregl.Marker | null>(null);
 
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
+  const [pinpointCoords, setPinpointCoords] = useState<[number, number] | null>(null);
   const [basemap, setBasemap] = useState<BasemapType>('google-hybrid');
   const [showZones, setShowZones] = useState<boolean>(true);
   const [showRoads, setShowRoads] = useState<boolean>(true);
@@ -175,7 +180,13 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         },
       });
 
-      // Zone click listener
+      // Global Map Click Listener for Point Inspector Tool
+      map.on('click', (e) => {
+        // Drop pinpoint crosshair at clicked GPS coordinate
+        setPinpointCoords([e.lngLat.lng, e.lngLat.lat]);
+      });
+
+      // Zone click listener (opens zone drilldown)
       map.on('click', 'zones-fill', (e) => {
         if (e.features && e.features[0]) {
           const zoneId = e.features[0].properties?.id;
@@ -187,7 +198,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       });
 
       map.on('mouseenter', 'zones-fill', () => {
-        map.getCanvas().style.cursor = 'pointer';
+        map.getCanvas().style.cursor = 'crosshair';
       });
       map.on('mouseleave', 'zones-fill', () => {
         map.getCanvas().style.cursor = '';
@@ -308,6 +319,36 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       );
     }
   }, [basemap]);
+
+  // Handle Pinpoint Marker Creation & Movement
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (pinpointMarkerRef.current) {
+      pinpointMarkerRef.current.remove();
+      pinpointMarkerRef.current = null;
+    }
+
+    if (pinpointCoords) {
+      const el = document.createElement('div');
+      el.className = 'pinpoint-crosshair flex items-center justify-center';
+      el.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          <div class="w-12 h-12 rounded-full border-2 border-cyan-400 bg-cyan-400/20 animate-ping absolute"></div>
+          <div class="w-8 h-8 rounded-full border border-cyan-300 bg-[#0a1122]/90 flex items-center justify-center text-cyan-300 font-mono text-[10px] font-bold shadow-2xl">
+            🎯
+          </div>
+        </div>
+      `;
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(pinpointCoords)
+        .addTo(map);
+
+      pinpointMarkerRef.current = marker;
+    }
+  }, [pinpointCoords]);
 
   // Update GeoJSON & Markers
   useEffect(() => {
@@ -460,13 +501,14 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   return (
     <div className="relative w-full h-[calc(100vh-140px)] min-h-[550px] rounded-xl overflow-hidden border border-[#212b40] shadow-2xl bg-[#090d16]">
       {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full" />
+      <div ref={mapContainerRef} className="w-full h-full cursor-crosshair" />
 
       {/* Earth.NullSchool Wind Stream Particle Canvas Layer */}
       <WindStreamOverlay
         map={mapInstance}
         centerLngLat={stormLngLat}
         windSpeedKmh={hazard?.wind_speed_kmh || 85.0}
+        windDirectionDeg={hazard?.wind_direction_deg || 135.0}
         windDirection={hazard?.movement_direction || 'NW'}
         isActive={showWindStreams}
       />
@@ -491,8 +533,19 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         />
       </div>
 
+      {/* Floating Pinpoint Live Inspection HUD */}
+      {pinpointCoords && (
+        <div className="absolute top-4 right-4 z-30">
+          <PointInspectorPopup
+            coordinates={pinpointCoords}
+            onClose={() => setPinpointCoords(null)}
+            onSetSimulationFocus={onSetSimulationFocus}
+          />
+        </div>
+      )}
+
       {/* Floating Selected Zone Popup Card */}
-      {selectedZone && (
+      {selectedZone && !pinpointCoords && (
         <div className="absolute bottom-4 right-4 z-30">
           <ZonePopup
             zone={selectedZone}
@@ -503,10 +556,11 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         </div>
       )}
 
-      {/* Quick Instructional Pill */}
-      {!selectedZone && (
-        <div className="absolute bottom-4 left-4 z-20 bg-[#0f1422]/90 border border-[#212b40] rounded-lg px-3 py-1.5 text-xs text-slate-300 font-mono shadow-xl backdrop-blur">
-          💡 Click any risk polygon for localized flood exposure & shelter routing drilldown
+      {/* Quick Instructional Crosshair Banner */}
+      {!pinpointCoords && !selectedZone && (
+        <div className="absolute bottom-4 left-4 z-20 bg-[#0f1422]/90 border border-cyan-500/40 rounded-lg px-3 py-1.5 text-xs text-cyan-300 font-mono shadow-2xl backdrop-blur flex items-center space-x-2">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span>🎯 Click ANYWHERE on the map to drop a pin and inspect live real-time weather & flood threat!</span>
         </div>
       )}
     </div>

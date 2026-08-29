@@ -133,10 +133,39 @@ class RadarLayerResponse(BaseModel):
     tile_url: Optional[str] = None
     attribution: str = ""
 
+class PointTelemetryResponse(BaseModel):
+    latitude: float
+    longitude: float
+    temperature_c: float
+    humidity_percent: float
+    rainfall_rate_mm_hr: float
+    rain_24h_sum_mm: float
+    wind_speed_kmh: float
+    wind_gusts_kmh: float
+    wind_direction_deg: float
+    wind_direction_cardinal: str
+    surface_pressure_hpa: float
+    elevation_meters: float
+    weather_description: str
+    soil_saturation_percent: float
+    point_risk_score: float
+    risk_tier: str
+    updated_at: str
+
 @router.get("/weather/radar", response_model=RadarLayerResponse)
 async def get_live_radar_tiles():
     """
     Fetches live RainViewer Doppler radar timestamp and tile template.
     """
     return await weather_service.fetch_radar_layer_info()
+
+@router.get("/weather/point", response_model=PointTelemetryResponse)
+async def inspect_live_point(
+    lat: float = Query(..., description="Latitude of pinpoint"),
+    lng: float = Query(..., description="Longitude of pinpoint")
+):
+    """
+    Fetches localized real-time weather and computed flood risk for any clicked GPS coordinate on the map.
+    """
+    return await weather_service.fetch_point_telemetry(lat=lat, lng=lng)
 
