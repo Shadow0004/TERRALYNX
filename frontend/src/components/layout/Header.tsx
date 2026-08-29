@@ -83,15 +83,21 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onFetchLiveWeather}
           disabled={isSimulating}
-          className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg font-mono text-xs transition-all ${
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all shadow-md active:scale-95 ${
             isLiveFeed
-              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500 shadow-md shadow-emerald-950'
-              : 'bg-[#141b2a] hover:bg-emerald-950/60 text-slate-300 hover:text-emerald-300 border border-[#232f48] hover:border-emerald-700/60'
+              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500 ring-1 ring-emerald-500/40'
+              : 'bg-[#141b2a] hover:bg-emerald-950/80 text-slate-200 hover:text-emerald-300 border border-emerald-700/60 hover:border-emerald-500'
           }`}
           title="Fetch live atmospheric, precipitation and wind data from Open-Meteo API"
         >
-          <span className={`h-2 w-2 rounded-full ${isLiveFeed ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`}></span>
-          <span>{isLiveFeed ? 'LIVE METEO ACTIVE' : 'FETCH LIVE METEO'}</span>
+          {isSimulating ? (
+            <RefreshCw className="w-3 h-3 text-emerald-400 animate-spin" />
+          ) : (
+            <span className={`h-2 w-2 rounded-full ${isLiveFeed ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400'}`}></span>
+          )}
+          <span className="font-bold">
+            {isSimulating ? 'FETCHING METEO...' : isLiveFeed ? 'LIVE METEO ACTIVE' : '⚡ FETCH LIVE METEO'}
+          </span>
         </button>
 
         {isSimulationActive && (
