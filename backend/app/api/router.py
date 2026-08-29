@@ -122,7 +122,7 @@ async def get_live_weather_scenario(
     district_title = telemetry_data.get("location_name") or location
 
     # Generate dynamic district zones, roads, shelters, and routing for this coordinate
-    scenario_service.set_dynamic_district(
+    await scenario_service.set_dynamic_district(
         lat=lat,
         lng=lng,
         district_name=district_title,

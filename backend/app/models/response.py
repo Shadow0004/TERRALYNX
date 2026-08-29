@@ -27,6 +27,8 @@ class EvacuationRoute(BaseModel):
     route_risk_level: str # LOW_RISK, MEDIUM_RISK, HIGH_RISK, UNUSABLE
     used_road_ids: List[str]
     unsafe_road_warnings: List[str] = []
+    shortest_distance_km: Optional[float] = None
+    route_selection_rationale: Optional[str] = None
     is_primary: bool = True
     alternative_to_route_id: Optional[str] = None
 

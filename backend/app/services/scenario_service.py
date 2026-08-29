@@ -46,7 +46,7 @@ class ScenarioService:
         self.raw_hospitals = get_seed_hospitals()
         self.raw_roads = get_seed_roads()
 
-    def set_dynamic_district(
+    async def set_dynamic_district(
         self,
         lat: float,
         lng: float,
@@ -54,8 +54,8 @@ class ScenarioService:
         hazard: HazardTelemetry
     ):
         """Sets active district geographic elements dynamically for any point on Earth."""
-        from backend.app.services.dynamic_district_generator import generate_dynamic_district_data
-        zones, shelters, temp_shelters, hospitals, roads = generate_dynamic_district_data(
+        from backend.app.services.dynamic_district_generator import generate_dynamic_district_data_async
+        zones, shelters, temp_shelters, hospitals, roads = await generate_dynamic_district_data_async(
             center_lat=lat,
             center_lng=lng,
             district_name=district_name,

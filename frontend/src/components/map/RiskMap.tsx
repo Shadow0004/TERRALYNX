@@ -1,10 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { Zone, Shelter, Hospital, RoadSegment, EvacuationRoute, ShelterAllocationItem, HazardTelemetry } from '../../types';
+import {
+  Zone,
+  Shelter,
+  Hospital,
+  RoadSegment,
+  EvacuationRoute,
+  ShelterAllocationItem,
+  HazardTelemetry,
+  DistrictState
+} from '../../types';
 import { MapLegend, BasemapType } from './MapLegend';
 import { ZonePopup } from './ZonePopup';
 import { WindStreamOverlay } from './WindStreamOverlay';
 import { PointInspectorPopup } from './PointInspectorPopup';
+import { LocationSearchBar } from './LocationSearchBar';
+import { DemographicsCard } from './DemographicsCard';
+import { Users, Info } from 'lucide-react';
 
 interface RiskMapProps {
   zones: Zone[];
@@ -14,7 +26,9 @@ interface RiskMapProps {
   routes: EvacuationRoute[];
   allocations: ShelterAllocationItem[];
   hazard?: HazardTelemetry;
-  onSetSimulationFocus?: (lat: number, lng: number) => void;
+  fullState?: DistrictState;
+  onSetSimulationFocus?: (lat: number, lng: number, locationName?: string) => void;
+  isLoading?: boolean;
 }
 
 const BASEMAP_TILES: Record<BasemapType, { url: string; attribution: string }> = {
@@ -40,7 +54,9 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   routes,
   allocations,
   hazard,
+  fullState,
   onSetSimulationFocus,
+  isLoading = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -51,6 +67,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [pinpointCoords, setPinpointCoords] = useState<[number, number] | null>(null);
+  const [showDemographics, setShowDemographics] = useState<boolean>(false);
   const [basemap, setBasemap] = useState<BasemapType>('google-hybrid');
   const [showZones, setShowZones] = useState<boolean>(true);
   const [showRoads, setShowRoads] = useState<boolean>(true);
@@ -60,8 +77,8 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   const [showWindStreams, setShowWindStreams] = useState<boolean>(true);
 
   const stormLngLat: [number, number] = [
-    hazard?.center_coordinates.lng || 85.95,
-    hazard?.center_coordinates.lat || 19.75,
+    hazard?.center_coordinates.lng || 85.8312,
+    hazard?.center_coordinates.lat || 19.8135,
   ];
 
   // Initialize MapLibre GL map with Google Hybrid basemap
@@ -106,9 +123,9 @@ export const RiskMap: React.FC<RiskMapProps> = ({
           },
         ],
       },
-      center: [85.8312, 19.8135], // Center of Purva Coastal District
-      zoom: 10.8,
-      pitch: 35, // Oblique 3D perspective
+      center: stormLngLat,
+      zoom: 11.2,
+      pitch: 32,
       bearing: -5,
     });
 
@@ -141,7 +158,6 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         data: zoneGeoJSON,
       });
 
-      // Zone fill layer with tactical alpha
       map.addLayer({
         id: 'zones-fill',
         type: 'fill',
@@ -156,11 +172,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
             'SAFE', '#10b981',
             '#64748b',
           ],
-          'fill-opacity': 0.42,
+          'fill-opacity': 0.38,
         },
       });
 
-      // Glowing outline layer
       map.addLayer({
         id: 'zones-outline',
         type: 'line',
@@ -182,7 +197,6 @@ export const RiskMap: React.FC<RiskMapProps> = ({
 
       // Global Map Click Listener for Point Inspector Tool
       map.on('click', (e) => {
-        // Drop pinpoint crosshair at clicked GPS coordinate
         setPinpointCoords([e.lngLat.lng, e.lngLat.lat]);
       });
 
@@ -305,7 +319,6 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         attribution: BASEMAP_TILES[basemap].attribution,
       });
 
-      // Insert basemap as base layer
       const firstLayerId = map.getStyle().layers[0]?.id;
       map.addLayer(
         {
@@ -455,7 +468,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       });
     }
 
-    // Cyclone Eye Tracker Marker with Pulsating Concentric Rings
+    // Cyclone Eye Tracker Marker
     cycloneMarkerRef.current.forEach((m) => m.remove());
     cycloneMarkerRef.current = [];
 
@@ -477,16 +490,16 @@ export const RiskMap: React.FC<RiskMapProps> = ({
 
     cycloneMarkerRef.current.push(cycloneMarker);
 
-    // Smoothly fly camera to new district center when coordinates change significantly
+    // Smoothly fly camera to new district center
     if (hazard?.center_coordinates) {
       const curCenter = map.getCenter();
       const distDeg = Math.sqrt(
         Math.pow(curCenter.lng - stormLngLat[0], 2) + Math.pow(curCenter.lat - stormLngLat[1], 2)
       );
-      if (distDeg > 0.4) {
+      if (distDeg > 0.3) {
         map.flyTo({
           center: stormLngLat,
-          zoom: 10.8,
+          zoom: 11.2,
           speed: 1.4,
           curve: 1.2,
           essential: true,
@@ -520,6 +533,16 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full cursor-crosshair" />
 
+      {/* Location Search Bar Floating Top Center */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-4">
+        <LocationSearchBar
+          onSelectLocation={(lat, lng, locName) => {
+            if (onSetSimulationFocus) onSetSimulationFocus(lat, lng, locName);
+          }}
+          isLoading={isLoading}
+        />
+      </div>
+
       {/* Earth.NullSchool Wind Stream Particle Canvas Layer */}
       <WindStreamOverlay
         map={mapInstance}
@@ -550,9 +573,37 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         />
       </div>
 
+      {/* Top Right Controls: Demographics Button */}
+      <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
+        {fullState && (
+          <button
+            onClick={() => setShowDemographics(!showDemographics)}
+            className={`px-3 py-2 rounded-xl text-xs font-mono font-bold shadow-2xl backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
+              showDemographics
+                ? 'bg-cyan-600 text-slate-950 border-cyan-400'
+                : 'bg-[#0d1322]/95 hover:bg-[#151f35] text-cyan-300 border-[#263553]'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Demographics</span>
+          </button>
+        )}
+      </div>
+
+      {/* Demographics Card Popup */}
+      {showDemographics && fullState && (
+        <div className="absolute top-16 right-4 z-30">
+          <DemographicsCard
+            state={fullState}
+            onClose={() => setShowDemographics(false)}
+            onSelectZone={(z) => setSelectedZone(z)}
+          />
+        </div>
+      )}
+
       {/* Floating Pinpoint Live Inspection HUD */}
-      {pinpointCoords && (
-        <div className="absolute top-4 right-4 z-30">
+      {pinpointCoords && !showDemographics && (
+        <div className="absolute top-16 right-4 z-30">
           <PointInspectorPopup
             coordinates={pinpointCoords}
             onClose={() => setPinpointCoords(null)}
@@ -562,7 +613,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       )}
 
       {/* Floating Selected Zone Popup Card */}
-      {selectedZone && !pinpointCoords && (
+      {selectedZone && !pinpointCoords && !showDemographics && (
         <div className="absolute bottom-4 right-4 z-30">
           <ZonePopup
             zone={selectedZone}
@@ -574,10 +625,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       )}
 
       {/* Quick Instructional Crosshair Banner */}
-      {!pinpointCoords && !selectedZone && (
+      {!pinpointCoords && !selectedZone && !showDemographics && (
         <div className="absolute bottom-4 left-4 z-20 bg-[#0f1422]/90 border border-cyan-500/40 rounded-lg px-3 py-1.5 text-xs text-cyan-300 font-mono shadow-2xl backdrop-blur flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
-          <span>🎯 Click ANYWHERE on the map to drop a pin and inspect live real-time weather & flood threat!</span>
+          <span>🔍 Search any city above or click anywhere on the map to inspect live weather & flood threat!</span>
         </div>
       )}
     </div>
