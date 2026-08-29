@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0a0d14] text-slate-200 font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d121f;
+}
+::-webkit-scrollbar-thumb {
+  background: #232d42;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Radar sweep animation */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar {
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* MapLibre popup custom styling */
+.maplibregl-popup-content {
+  background-color: #111622 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #232d42 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: #111622 !important;
+}
+
+.maplibregl-ctrl-group {
+  background: #111622 !important;
+  border: 1px solid #232d42 !important;
+}
+
+.maplibregl-ctrl-group button {
+  border-bottom: 1px solid #232d42 !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: #1e293b !important;
+}
