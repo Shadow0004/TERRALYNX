@@ -101,10 +101,15 @@ def list_alerts():
 @router.post("/ai/query", response_model=AIQueryResponse)
 def query_ai_assistant(request: AIQueryRequest):
     """
-    Queries the grounded Operational AI Assistant for decision intelligence and explanations.
+    Queries the grounded Operational AI Assistant (powered by Google Gemini) for decision intelligence and explanations.
     """
     global _current_state
-    return ai_assistant.answer_query(query=request.query, state=_current_state)
+    return ai_assistant.answer_query(
+        query=request.query,
+        state=_current_state,
+        api_key=request.api_key,
+        model_name=request.model_name
+    )
 
 @router.get("/weather/live", response_model=DistrictState)
 async def get_live_weather_scenario(

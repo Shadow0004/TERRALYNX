@@ -43,13 +43,17 @@ export const apiService = {
     return res.json();
   },
 
-  async queryAI(query: string): Promise<AIQueryResponse> {
+  async queryAI(query: string, apiKey?: string, modelName?: string): Promise<AIQueryResponse> {
     const res = await fetch(`${API_BASE_URL}/ai/query`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({
+        query,
+        api_key: apiKey || undefined,
+        model_name: modelName || 'gemini-2.5-flash',
+      }),
     });
     if (!res.ok) {
       throw new Error(`AI query failed: ${res.statusText}`);

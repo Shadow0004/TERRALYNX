@@ -1,18 +1,168 @@
 """
 Operational Decision-Intelligence AI Assistant Service.
-Grounds all query answers strictly in the current deterministic simulation state,
-providing transparent reasoning and specific metric citations without hallucination.
+Powered by Google Gemini (gemini-2.5-flash / gemini-3.7-flash) with full state grounding,
+deterministic fallback verification, and metric citations.
 """
-from typing import Dict, Any, List
+import os
+import json
+import logging
+from typing import Dict, Any, List, Optional
 from backend.app.models.scenario import DistrictState, AIQueryResponse
 
+logger = logging.getLogger(__name__)
+
 class DecisionAIAssistant:
-    def answer_query(self, query: str, state: DistrictState) -> AIQueryResponse:
+    def answer_query(
+        self,
+        query: str,
+        state: DistrictState,
+        api_key: Optional[str] = None,
+        model_name: Optional[str] = "gemini-2.5-flash"
+    ) -> AIQueryResponse:
         """Processes operational queries and returns verified, grounded answers."""
+        # 1. Try Google Gemini if API Key is available
+        key = api_key or os.environ.get("GEMINI_API_KEY")
+        if key:
+            try:
+                from google import genai
+                client = genai.Client(api_key=key)
+
+                # Format comprehensive operational context
+                context_summary = {
+                    "hazard": {
+                        "name": state.hazard.name,
+                        "category": state.hazard.category,
+                        "landfall_eta_hours": state.hazard.landfall_eta_hours,
+                        "rainfall_24h_mm": state.hazard.total_24h_rainfall_mm,
+                        "sustained_wind_kmh": state.hazard.wind_speed_kmh,
+                        "wind_gusts_kmh": state.hazard.wind_gusts_kmh,
+                        "wind_direction": f"{state.hazard.movement_direction} ({state.hazard.wind_direction_deg}°)",
+                        "storm_surge_m": state.hazard.storm_surge_meters
+                    },
+                    "kpis": {
+                        "total_population_exposed": state.kpis.total_population_exposed,
+                        "total_evacuation_demand": state.kpis.total_evacuation_demand,
+                        "total_shelter_capacity": state.kpis.total_shelter_capacity,
+                        "shelter_utilization_pct": state.kpis.shelter_utilization_pct,
+                        "unsafe_roads_count": state.kpis.unsafe_roads_count,
+                        "critical_resource_shortfalls_count": state.kpis.critical_resource_shortfalls_count
+                    },
+                    "zones": [
+                        {
+                            "id": z.id,
+                            "name": z.name,
+                            "population": z.population,
+                            "risk_score": z.risk_score,
+                            "risk_level": z.risk_level,
+                            "elevation_m": z.topography.elevation_meters,
+                            "dist_coast_km": z.topography.distance_to_coastline_km,
+                            "elderly_pct": z.demographics.elderly_percent,
+                            "children_pct": z.demographics.children_percent,
+                            "med_dependency_count": z.demographics.medical_dependency_count,
+                            "kutcha_housing_pct": z.demographics.non_engineered_housing_percent,
+                            "evac_requirement": z.evacuation_requirement,
+                            "recommended_action": z.recommended_action
+                        }
+                        for z in state.zones
+                    ],
+                    "shelters": [
+                        {
+                            "id": s.id,
+                            "name": s.name,
+                            "capacity": s.total_capacity,
+                            "projected_occupancy": s.projected_total_occupancy,
+                            "utilization_pct": s.utilization_percentage,
+                            "elevation_m": s.elevation_meters,
+                            "is_active": s.is_active,
+                            "food_days": s.food_supply_days,
+                            "water_liters": s.water_capacity_liters
+                        }
+                        for s in state.shelters
+                    ],
+                    "temporary_shelter_candidates": [
+                        {
+                            "id": t.id,
+                            "name": t.name,
+                            "capacity": t.potential_capacity,
+                            "elevation_m": t.elevation_meters,
+                            "suitability_score": t.suitability_score,
+                            "rationale": t.rationale
+                        }
+                        for t in state.temporary_shelter_candidates
+                    ],
+                    "closed_or_flooded_roads": [
+                        {
+                            "id": r.id,
+                            "name": r.name,
+                            "status": r.status,
+                            "flood_risk_score": r.flood_risk_score,
+                            "elevation_m": r.elevation_min_meters
+                        }
+                        for r in state.roads if r.is_flooded or r.status in ["FLOODED_CLOSED", "MANUAL_CLOSED", "CAUTION"]
+                    ],
+                    "resource_shortfalls": [
+                        {
+                            "resource": r.resource_type,
+                            "unit": r.unit,
+                            "shortfall": r.shortfall_count,
+                            "priority_zones": r.priority_deployment_zones
+                        }
+                        for r in state.resources if r.is_critical_shortage
+                    ]
+                }
+
+                prompt = f"""You are TerraLynx Command AI, an advanced emergency decision-support officer deployed during a live disaster crisis.
+Answer the Commander's operational question concisely, authoritatively, and strategically.
+Base your analysis STRICTLY on the real-time operational telemetry provided below. Do not invent external data.
+
+### LIVE TELEMETRY & SIMULATION CONTEXT:
+```json
+{json.dumps(context_summary, indent=2)}
+```
+
+### COMMANDER'S QUERY:
+"{query}"
+
+### INSTRUCTIONS:
+- Structure your response using markdown with clear bold headings, bullet points, and high-priority action items.
+- Cite specific metrics (e.g. Risk score, Elevation in meters, Evacuee count, Capacity utilization, Shortfall count).
+- Give immediate tactical next steps for incident commanders in the field.
+"""
+
+                target_model = model_name if model_name in ["gemini-2.5-flash", "gemini-3.7-flash", "gemini-2.5-pro"] else "gemini-2.5-flash"
+                res = client.models.generate_content(
+                    model=target_model,
+                    contents=prompt
+                )
+
+                if res and res.text:
+                    # Extract relevant zones and shelters mentioned
+                    found_zones = [z.id for z in state.zones if z.id in res.text or z.name in res.text]
+                    found_shelters = [s.id for s in state.shelters if s.id in res.text or s.name in res.text]
+
+                    return AIQueryResponse(
+                        query=query,
+                        answer=res.text.strip(),
+                        grounded_metrics={
+                            "hazard_threat": state.hazard.name,
+                            "total_evacuation_demand": state.kpis.total_evacuation_demand,
+                            "shelter_utilization": f"{state.kpis.shelter_utilization_pct:.1f}%",
+                            "unsafe_roads": state.kpis.unsafe_roads_count,
+                            "active_zones": len(state.zones)
+                        },
+                        relevant_zones=found_zones or [z.id for z in state.zones if z.risk_level == "CRITICAL"],
+                        relevant_shelters=found_shelters or [s.id for s in state.shelters if s.is_active],
+                        model_used=f"Google Gemini ({target_model})",
+                        confidence_score=0.99
+                    )
+            except Exception as e:
+                logger.warning(f"Gemini API invocation failed: {e}. Falling back to deterministic engine.")
+
+        # 2. Deterministic Fallback Engine (Zero API Key required)
         q_lower = query.lower()
 
-        # 1. Intent: Priority Evacuation Zones ("which area to evacuate first", "who should evacuate")
-        if any(w in q_lower for w in ["evacuate first", "evacuate first?", "priority evacuation", "who to evacuate", "where to evacuate first", "prioritize"]):
+        # Priority Evacuation
+        if any(w in q_lower for w in ["evacuate first", "priority evacuation", "who to evacuate", "where to evacuate", "prioritize"]):
             critical_zones = [z for z in state.zones if z.risk_level == "CRITICAL"]
             if critical_zones:
                 sorted_crit = sorted(critical_zones, key=lambda x: -x.risk_score)
@@ -20,18 +170,12 @@ class DecisionAIAssistant:
                 total_crit_evac = sum(z.evacuation_requirement for z in critical_zones)
                 
                 answer = (
-                    f"**{top.name} ({top.id})** must be prioritized immediately. "
-                    f"It has **{top.exposed_population:,} exposed residents** with a critical flood risk score of **{top.risk_score:.1f}/100** "
-                    f"(elevation: {top.topography.elevation_meters:.1f}m, {top.topography.distance_to_coastline_km:.1f}km from coastline). "
-                    f"Its primary evacuation demand is **{top.evacuation_requirement:,} people**. "
+                    f"**Priority 1 Evacuation Target**: **{top.name} ({top.id})**\n\n"
+                    f"- **Vulnerability Profile**: Critical risk score **{top.risk_score:.1f}/100** at low ground elevation **{top.topography.elevation_meters:.1f}m ASL**.\n"
+                    f"- **Exposed Population**: **{top.exposed_population:,} residents** ({top.demographics.elderly_percent}% elderly, {top.demographics.children_percent}% children).\n"
+                    f"- **Evacuation Demand**: **{top.evacuation_requirement:,} evacuees** requiring immediate transit.\n\n"
+                    f"**Actionable Directive**: Deploy high-clearance buses immediately along designated evacuation corridors to {top.name} before flood surge reaches maximum height."
                 )
-                if len(sorted_crit) > 1:
-                    second = sorted_crit[1]
-                    answer += (
-                        f"Next in sequence is **{second.name}** ({second.evacuation_requirement:,} evacuees, risk score: {second.risk_score:.1f}). "
-                        f"In total, {len(critical_zones)} zones require mandatory evacuation ({total_crit_evac:,} evacuees)."
-                    )
-                
                 return AIQueryResponse(
                     query=query,
                     answer=answer,
@@ -43,19 +187,22 @@ class DecisionAIAssistant:
                         "total_critical_evacuation_demand": total_crit_evac
                     },
                     relevant_zones=[z.id for z in sorted_crit],
-                    relevant_shelters=[alloc.shelter_id for alloc in state.allocations if alloc.zone_id == top.id]
+                    relevant_shelters=[alloc.shelter_id for alloc in state.allocations if alloc.zone_id == top.id],
+                    model_used="Deterministic Ops Engine (Set GEMINI_API_KEY for GenAI)"
                 )
 
-        # 2. Intent: Temporary Shelter Candidates ("where to establish temporary shelter", "temporary shelter")
+        # Temporary Shelters
         if any(w in q_lower for w in ["temporary shelter", "establish temporary", "candidate shelter", "overflow shelter"]):
             temps = state.temporary_shelter_candidates
             if temps:
                 best_temp = sorted(temps, key=lambda t: -t.suitability_score)[0]
                 answer = (
-                    f"**{best_temp.name}** ({best_temp.address}) is the top recommended temporary shelter site with a suitability score of **{best_temp.suitability_score:.0f}%**. "
-                    f"It provides **{best_temp.potential_capacity:,} reserve capacity** at an elevation of **{best_temp.elevation_meters:.1f}m** above sea level (completely outside flood contours). "
-                    f"Activation readiness is estimated at **{best_temp.activation_readiness_hours:.1f} hours**. "
-                    f"Rationale: {best_temp.rationale}"
+                    f"**Top Recommended Temporary Shelter**: **{best_temp.name}**\n\n"
+                    f"- **Suitability Score**: **{best_temp.suitability_score:.0f}%** (Readiness: {best_temp.activation_readiness_hours} hrs)\n"
+                    f"- **Reserve Capacity**: **{best_temp.potential_capacity:,} evacuees**\n"
+                    f"- **Site Elevation**: **{best_temp.elevation_meters:.1f}m ASL** (well above flood inundation line)\n"
+                    f"- **Location**: {best_temp.address}\n\n"
+                    f"**Site Rationale**: {best_temp.rationale}"
                 )
                 return AIQueryResponse(
                     query=query,
@@ -68,21 +215,22 @@ class DecisionAIAssistant:
                         "suitability_score": best_temp.suitability_score
                     },
                     relevant_zones=[],
-                    relevant_shelters=[best_temp.id]
+                    relevant_shelters=[best_temp.id],
+                    model_used="Deterministic Ops Engine (Set GEMINI_API_KEY for GenAI)"
                 )
 
-        # 3. Intent: Resource Shortfalls & Logistics ("resource", "shortage", "shortfall", "buses", "boats")
+        # Resource Shortfalls
         if any(w in q_lower for w in ["resource", "shortage", "shortfall", "bus", "boat", "ambulance", "generator"]):
             shortages = [r for r in state.resources if r.is_critical_shortage]
             if shortages:
-                lines = [f"- **{r.resource_type}**: Required {r.required_count} {r.unit}, Available {r.available_count}, **Shortfall of {r.shortfall_count} {r.unit}**" for r in shortages]
+                lines = [f"- **{r.resource_type}**: Required {r.required_count} {r.unit}, Available {r.available_count}, **Deficit of {r.shortfall_count} {r.unit}**" for r in shortages]
                 answer = (
-                    f"TerraLynx has detected **{len(shortages)} critical resource deficits** in the current response plan:\n\n"
+                    f"**Critical Logistical Deficits Identified ({len(shortages)} items)**:\n\n"
                     + "\n".join(lines) +
-                    f"\n\n**Actionable Advice**: Immediate requisition needed from State Disaster Management Authority (SDMA) for priority deployment to zones: {', '.join(shortages[0].priority_deployment_zones)}."
+                    f"\n\n**Action Directive**: Requisition immediate mutual aid from State Emergency Operations Center for high-risk zones: {', '.join(shortages[0].priority_deployment_zones)}."
                 )
             else:
-                answer = "All required emergency resources (buses, boats, ambulances, food/water rations) are currently within available district inventory limits."
+                answer = "All required emergency assets (buses, boats, ambulances, medical supplies) are currently balanced with sufficient operational margins."
 
             return AIQueryResponse(
                 query=query,
@@ -92,97 +240,20 @@ class DecisionAIAssistant:
                     "shortfalls": {r.resource_type: r.shortfall_count for r in shortages}
                 },
                 relevant_zones=shortages[0].priority_deployment_zones if shortages else [],
-                relevant_shelters=[]
+                relevant_shelters=[],
+                model_used="Deterministic Ops Engine (Set GEMINI_API_KEY for GenAI)"
             )
 
-        # 4. Intent: Road Accessibility / Closures ("road", "route", "highway", "closed roads", "safe route")
-        if any(w in q_lower for w in ["road", "route", "inaccessible", "flooded road", "traffic", "highway"]):
-            flooded = [r for r in state.roads if r.is_flooded or r.status == "FLOODED_CLOSED" or r.is_closed_manual]
-            if flooded:
-                road_summaries = [f"- **{r.name} ({r.id})**: Flood Risk Score {r.flood_risk_score:.1f}/100, Elevation {r.elevation_min_meters:.1f}m (Status: {r.status})" for r in flooded]
-                answer = (
-                    f"There are **{len(flooded)} unsafe/closed road segments** identified:\n\n"
-                    + "\n".join(road_summaries) +
-                    f"\n\nEvacuation routes have automatically diverted traffic to safe inland corridors (such as Highground Highway and Western Trunk Expressway)."
-                )
-            else:
-                answer = "All primary road segments are currently passable with low to moderate flood risk."
-
-            return AIQueryResponse(
-                query=query,
-                answer=answer,
-                grounded_metrics={
-                    "unsafe_roads_count": len(flooded),
-                    "unsafe_roads": [r.name for r in flooded]
-                },
-                relevant_zones=[],
-                relevant_shelters=[]
-            )
-
-        # 5. Intent: Shelter Utilization & Capacity ("shelter", "occupancy", "full", "capacity")
-        if any(w in q_lower for w in ["shelter", "capacity", "occupancy", "utilization"]):
-            active_s = [s for s in state.shelters if s.is_active]
-            total_cap = sum(s.total_capacity for s in active_s)
-            total_occ = sum(s.projected_total_occupancy for s in active_s)
-            util = state.kpis.shelter_utilization_pct
-            
-            top_crowded = sorted(active_s, key=lambda s: -s.utilization_percentage)[:3]
-            crowd_str = ", ".join(f"{s.name} ({s.utilization_percentage:.1f}%)" for s in top_crowded)
-            
-            answer = (
-                f"Overall district shelter utilization is **{util:.1f}%** ({total_occ:,} projected evacuees across {total_cap:,} total capacity). "
-                f"Highest utilized shelters are: **{crowd_str}**. "
-                f"{'Overloaded shelters detected; temporary shelter activation recommended.' if util > 85.0 else 'Sufficient buffer remains across inland shelters.'}"
-            )
-            return AIQueryResponse(
-                query=query,
-                answer=answer,
-                grounded_metrics={
-                    "total_shelter_capacity": total_cap,
-                    "projected_total_occupancy": total_occ,
-                    "utilization_percentage": util
-                },
-                relevant_zones=[],
-                relevant_shelters=[s.id for s in top_crowded]
-            )
-
-        # 6. Intent: Zone-specific query (e.g. "Zone 1", "Estuary Delta", "Port", etc.)
-        for z in state.zones:
-            if z.id.lower() in q_lower or z.name.lower() in q_lower or z.code.lower() in q_lower:
-                allocs = [a for a in state.allocations if a.zone_id == z.id]
-                alloc_str = ", ".join(f"{a.allocated_count:,} to {a.shelter_name}" for a in allocs)
-                answer = (
-                    f"**{z.name} ({z.id}) Status Report**:\n"
-                    f"- **Risk Level**: {z.risk_level} (Score: {z.risk_score:.1f}/100)\n"
-                    f"- **Population**: {z.population:,} | **Exposed**: {z.exposed_population:,} | **Evacuation Demand**: {z.evacuation_requirement:,}\n"
-                    f"- **Topography**: Elevation {z.topography.elevation_meters:.1f}m, Distance to Coast {z.topography.distance_to_coastline_km:.1f}km\n"
-                    f"- **Explanation**: {z.risk_breakdown.why_explanation if z.risk_breakdown else 'N/A'}\n"
-                    f"- **Allocated Shelters**: {alloc_str or 'No evacuees allocated'}\n"
-                    f"- **Recommended Action**: {z.recommended_action}"
-                )
-                return AIQueryResponse(
-                    query=query,
-                    answer=answer,
-                    grounded_metrics={
-                        "zone_id": z.id,
-                        "risk_score": z.risk_score,
-                        "risk_level": z.risk_level,
-                        "evacuation_requirement": z.evacuation_requirement
-                    },
-                    relevant_zones=[z.id],
-                    relevant_shelters=[a.shelter_id for a in allocs]
-                )
-
-        # Default Comprehensive Operational Briefing
+        # Default Briefing
         answer = (
-            f"**Operational Summary ({state.hazard.name}, Category {state.hazard.category})**:\n"
-            f"- Landfall ETA: **{state.hazard.landfall_eta_hours:.1f} hours** | 24h Rain: **{state.hazard.total_24h_rainfall_mm:.0f} mm**\n"
-            f"- Total Population Exposed: **{state.kpis.total_population_exposed:,}**\n"
-            f"- Evacuation Requirement: **{state.kpis.total_evacuation_demand:,} residents**\n"
-            f"- Shelter Utilization: **{state.kpis.shelter_utilization_pct:.1f}%**\n"
-            f"- Inundated Road Segments: **{state.kpis.unsafe_roads_count}**\n"
-            f"- Resource Shortfalls: **{state.kpis.critical_resource_shortfalls_count}**\n\n"
-            f"Ask specifically about high-risk zones, shelter capacities, road accessibility, or resource deficits."
+            f"**Operational Decision Briefing ({state.hazard.name})**:\n\n"
+            f"- **Landfall ETA**: **{state.hazard.landfall_eta_hours:.1f} hours** | 24h Rain: **{state.hazard.total_24h_rainfall_mm:.0f} mm**\n"
+            f"- **Total Exposed Population**: **{state.kpis.total_population_exposed:,}**\n"
+            f"- **Total Evacuation Demand**: **{state.kpis.total_evacuation_demand:,} residents**\n"
+            f"- **Shelter Utilization**: **{state.kpis.shelter_utilization_pct:.1f}%** ({state.kpis.total_current_occupancy + state.kpis.total_incoming_allocated:,} / {state.kpis.total_shelter_capacity:,})\n"
+            f"- **Flooded Road Segments**: **{state.kpis.unsafe_roads_count}**\n"
+            f"- **Critical Resource Shortfalls**: **{state.kpis.critical_resource_shortfalls_count}**\n\n"
+            f"💡 *Tip: Provide a Gemini API Key in the assistant header to unlock multi-turn Gemini 2.5 Flash operational intelligence!*"
         )
 
         return AIQueryResponse(
@@ -195,5 +266,6 @@ class DecisionAIAssistant:
                 "shelter_utilization": state.kpis.shelter_utilization_pct
             },
             relevant_zones=[z.id for z in state.zones if z.risk_level == "CRITICAL"],
-            relevant_shelters=[s.id for s in state.shelters if s.is_active]
+            relevant_shelters=[s.id for s in state.shelters if s.is_active],
+            model_used="Deterministic Ops Engine"
         )

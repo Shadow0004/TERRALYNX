@@ -160,10 +160,12 @@ export interface EvacuationRoute {
   to_shelter_name: string;
   path_coordinates: [number, number][];
   total_distance_km: number;
+  shortest_distance_km?: number;
   estimated_travel_time_mins: number;
   route_risk_level: string;
   used_road_ids: string[];
   unsafe_road_warnings: string[];
+  route_selection_rationale?: string;
   is_primary: boolean;
 }
 
@@ -272,5 +274,6 @@ export interface AIQueryResponse {
   grounded_metrics: Record<string, any>;
   relevant_zones: string[];
   relevant_shelters: string[];
+  model_used?: string;
   confidence_score: number;
 }

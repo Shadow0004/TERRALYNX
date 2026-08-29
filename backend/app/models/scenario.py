@@ -74,6 +74,8 @@ class DistrictState(BaseModel):
 class AIQueryRequest(BaseModel):
     query: str
     include_context: bool = True
+    api_key: Optional[str] = None
+    model_name: Optional[str] = "gemini-2.5-flash"
 
 class AIQueryResponse(BaseModel):
     query: str
@@ -81,4 +83,5 @@ class AIQueryResponse(BaseModel):
     grounded_metrics: Dict[str, Any]
     relevant_zones: List[str]
     relevant_shelters: List[str]
+    model_used: str = "Deterministic Engine"
     confidence_score: float = 0.98
