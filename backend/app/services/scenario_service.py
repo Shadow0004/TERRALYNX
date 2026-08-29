@@ -46,6 +46,28 @@ class ScenarioService:
         self.raw_hospitals = get_seed_hospitals()
         self.raw_roads = get_seed_roads()
 
+    def set_dynamic_district(
+        self,
+        lat: float,
+        lng: float,
+        district_name: str,
+        hazard: HazardTelemetry
+    ):
+        """Sets active district geographic elements dynamically for any point on Earth."""
+        from backend.app.services.dynamic_district_generator import generate_dynamic_district_data
+        zones, shelters, temp_shelters, hospitals, roads = generate_dynamic_district_data(
+            center_lat=lat,
+            center_lng=lng,
+            district_name=district_name,
+            hazard=hazard
+        )
+        self.raw_hazard = hazard
+        self.raw_zones = zones
+        self.raw_shelters = shelters
+        self.raw_temp_shelters = temp_shelters
+        self.raw_hospitals = hospitals
+        self.raw_roads = roads
+
     def run_pipeline(self, overrides: Optional[SimulationOverrides] = None) -> DistrictState:
         """Executes the full deterministic calculation pipeline."""
         overrides = overrides or SimulationOverrides()

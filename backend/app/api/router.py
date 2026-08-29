@@ -113,15 +113,21 @@ async def get_live_weather_scenario(
     location: str = "Purva Coastal District (Puri Coast)"
 ):
     """
-    Fetches real-time weather from Open-Meteo API (100% free)
-    and recalculates all impact, exposure, shelters, and routes with live telemetry.
+    Fetches real-time weather and dynamically generates administrative zones,
+    shelters, road networks, and evacuation routes anywhere on Earth.
     """
     global _current_state
     telemetry_data = await weather_service.fetch_live_telemetry(lat=lat, lng=lng, location_name=location)
     live_hazard = telemetry_data["hazard_telemetry"]
-    
-    # Run the decision pipeline with live meteorological data
-    scenario_service.raw_hazard = live_hazard
+    district_title = telemetry_data.get("location_name") or location
+
+    # Generate dynamic district zones, roads, shelters, and routing for this coordinate
+    scenario_service.set_dynamic_district(
+        lat=lat,
+        lng=lng,
+        district_name=district_title,
+        hazard=live_hazard
+    )
     _current_state = scenario_service.run_pipeline(SimulationOverrides())
     return _current_state
 

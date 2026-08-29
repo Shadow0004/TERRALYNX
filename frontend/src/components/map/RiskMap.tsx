@@ -476,6 +476,23 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       .addTo(map);
 
     cycloneMarkerRef.current.push(cycloneMarker);
+
+    // Smoothly fly camera to new district center when coordinates change significantly
+    if (hazard?.center_coordinates) {
+      const curCenter = map.getCenter();
+      const distDeg = Math.sqrt(
+        Math.pow(curCenter.lng - stormLngLat[0], 2) + Math.pow(curCenter.lat - stormLngLat[1], 2)
+      );
+      if (distDeg > 0.4) {
+        map.flyTo({
+          center: stormLngLat,
+          zoom: 10.8,
+          speed: 1.4,
+          curve: 1.2,
+          essential: true,
+        });
+      }
+    }
   }, [zones, shelters, hospitals, roads, routes, showShelters, hazard]);
 
   // Handle Layer Visibility Toggles
