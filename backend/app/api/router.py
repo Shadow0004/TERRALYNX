@@ -18,10 +18,12 @@ from backend.app.models.response import (
 )
 from backend.app.services.scenario_service import ScenarioService
 from backend.app.services.ai_assistant import DecisionAIAssistant
+from backend.app.services.weather_service import OpenMeteoService
 
 router = APIRouter(prefix="/api")
 scenario_service = ScenarioService()
 ai_assistant = DecisionAIAssistant()
+weather_service = OpenMeteoService()
 
 # In-memory session state for active simulation
 _current_state: DistrictState = scenario_service.run_pipeline()
@@ -103,3 +105,30 @@ def query_ai_assistant(request: AIQueryRequest):
     """
     global _current_state
     return ai_assistant.answer_query(query=request.query, state=_current_state)
+
+@router.get("/weather/live", response_model=DistrictState)
+async def get_live_weather_scenario(
+    lat: float = 19.8135,
+    lng: float = 85.8312,
+    location: str = "Purva Coastal District (Puri Coast)"
+):
+    """
+    Fetches real-time weather from Open-Meteo API (100% free)
+    and recalculates all impact, exposure, shelters, and routes with live telemetry.
+    """
+    global _current_state
+    telemetry_data = await weather_service.fetch_live_telemetry(lat=lat, lng=lng, location_name=location)
+    live_hazard = telemetry_data["hazard_telemetry"]
+    
+    # Run the decision pipeline with live meteorological data
+    scenario_service.raw_hazard = live_hazard
+    _current_state = scenario_service.run_pipeline(SimulationOverrides())
+    return _current_state
+
+@router.get("/weather/radar")
+async def get_live_radar_tiles():
+    """
+    Fetches live RainViewer Doppler radar timestamp and tile template.
+    """
+    return await weather_service.fetch_radar_layer_info()
+

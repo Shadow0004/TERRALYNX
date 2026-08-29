@@ -10,6 +10,8 @@ interface MapLegendProps {
   setShowShelters: (val: boolean) => void;
   showRoutes: boolean;
   setShowRoutes: (val: boolean) => void;
+  showRadar: boolean;
+  setShowRadar: (val: boolean) => void;
 }
 
 export const MapLegend: React.FC<MapLegendProps> = ({
@@ -21,6 +23,8 @@ export const MapLegend: React.FC<MapLegendProps> = ({
   setShowShelters,
   showRoutes,
   setShowRoutes,
+  showRadar,
+  setShowRadar,
 }) => {
   return (
     <div className="bg-[#0f1422]/95 border border-[#212b40] rounded-xl p-3.5 shadow-2xl backdrop-blur-md text-xs space-y-3 w-64 select-none">
@@ -83,6 +87,19 @@ export const MapLegend: React.FC<MapLegendProps> = ({
             checked={showRoutes}
             onChange={(e) => setShowRoutes(e.target.checked)}
             className="rounded bg-[#1a2333] border-slate-600 text-cyan-500 focus:ring-0 w-3.5 h-3.5"
+          />
+        </label>
+
+        <label className="flex items-center justify-between text-slate-300 hover:text-white cursor-pointer py-0.5">
+          <span className="flex items-center space-x-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span className="text-emerald-300 font-medium">Live Doppler Radar</span>
+          </span>
+          <input
+            type="checkbox"
+            checked={showRadar}
+            onChange={(e) => setShowRadar(e.target.checked)}
+            className="rounded bg-[#1a2333] border-slate-600 text-emerald-500 focus:ring-0 w-3.5 h-3.5"
           />
         </label>
       </div>

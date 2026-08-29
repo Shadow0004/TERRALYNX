@@ -56,4 +56,20 @@ export const apiService = {
     }
     return res.json();
   },
+
+  async fetchLiveWeather(lat: number = 19.8135, lng: number = 85.8312, location: string = 'Purva Coastal District'): Promise<DistrictState> {
+    const res = await fetch(`${API_BASE_URL}/weather/live?lat=${lat}&lng=${lng}&location=${encodeURIComponent(location)}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch live weather telemetry: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  async fetchRadarInfo(): Promise<{ available: boolean; tile_url: string | null; attribution: string }> {
+    const res = await fetch(`${API_BASE_URL}/weather/radar`);
+    if (!res.ok) {
+      return { available: false, tile_url: null, attribution: '' };
+    }
+    return res.json();
+  },
 };

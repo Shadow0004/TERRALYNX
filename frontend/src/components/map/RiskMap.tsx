@@ -30,6 +30,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
   const [showRoads, setShowRoads] = useState<boolean>(true);
   const [showShelters, setShowShelters] = useState<boolean>(true);
   const [showRoutes, setShowRoutes] = useState<boolean>(true);
+  const [showRadar, setShowRadar] = useState<boolean>(true);
 
   // Initialize MapLibre GL map
   useEffect(() => {
@@ -43,12 +44,18 @@ export const RiskMap: React.FC<RiskMapProps> = ({
           'osm-tiles': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+              'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
             ],
             tileSize: 256,
-            attribution: '© OpenStreetMap contributors, © CARTO',
+            attribution: '© Esri, OpenStreetMap contributors',
+          },
+          'radar-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://tilecache.rainviewer.com/v2/radar/now/256/{z}/{x}/{y}/2/1_1.png',
+            ],
+            tileSize: 256,
+            attribution: '© RainViewer Live Doppler Radar',
           },
         },
         layers: [
@@ -58,6 +65,16 @@ export const RiskMap: React.FC<RiskMapProps> = ({
             source: 'osm-tiles',
             minzoom: 0,
             maxzoom: 19,
+          },
+          {
+            id: 'radar-layer',
+            type: 'raster',
+            source: 'radar-tiles',
+            minzoom: 0,
+            maxzoom: 19,
+            paint: {
+              'raster-opacity': 0.65,
+            },
           },
         ],
       },
@@ -311,9 +328,9 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       shelters.forEach((s) => {
         const el = document.createElement('div');
         el.className = 'shelter-marker-pin cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group';
-        
+
         const utilColor = s.is_overloaded ? 'bg-red-500' : s.utilization_percentage > 85 ? 'bg-amber-500' : 'bg-indigo-600';
-        
+
         el.innerHTML = `
           <div class="relative flex items-center justify-center w-7 h-7 rounded-full ${utilColor} border-2 border-white shadow-xl">
             <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -356,7 +373,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
     if (map.getLayer('routes-line')) {
       map.setLayoutProperty('routes-line', 'visibility', showRoutes ? 'visible' : 'none');
     }
-  }, [showZones, showRoads, showRoutes]);
+    if (map.getLayer('radar-layer')) {
+      map.setLayoutProperty('radar-layer', 'visibility', showRadar ? 'visible' : 'none');
+    }
+  }, [showZones, showRoads, showRoutes, showRadar]);
 
   return (
     <div className="relative w-full h-[calc(100vh-140px)] min-h-[550px] rounded-xl overflow-hidden border border-[#212b40] shadow-2xl bg-[#090d16]">
@@ -374,6 +394,8 @@ export const RiskMap: React.FC<RiskMapProps> = ({
           setShowShelters={setShowShelters}
           showRoutes={showRoutes}
           setShowRoutes={setShowRoutes}
+          showRadar={showRadar}
+          setShowRadar={setShowRadar}
         />
       </div>
 

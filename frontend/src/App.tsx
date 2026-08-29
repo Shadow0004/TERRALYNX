@@ -17,6 +17,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('command_center');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [isLiveFeed, setIsLiveFeed] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadScenario = async () => {
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
       setError(null);
       const data = await apiService.fetchCurrentScenario();
       setState(data);
+      setIsLiveFeed(data.hazard.status === 'LIVE_FEED');
     } catch (err: any) {
       setError(err.message || 'Failed to connect to TerraLynx Decision API');
     } finally {
@@ -35,6 +37,19 @@ export const App: React.FC = () => {
   useEffect(() => {
     loadScenario();
   }, []);
+
+  const handleFetchLiveWeather = async () => {
+    try {
+      setIsSimulating(true);
+      const liveData = await apiService.fetchLiveWeather();
+      setState(liveData);
+      setIsLiveFeed(true);
+    } catch (err: any) {
+      alert(`Live weather fetch failed: ${err.message}`);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   const handleRunSimulation = async (overrides: SimulationOverrides) => {
     try {
@@ -53,6 +68,7 @@ export const App: React.FC = () => {
       setIsSimulating(true);
       const reset = await apiService.resetScenario();
       setState(reset);
+      setIsLiveFeed(false);
     } catch (err: any) {
       alert(`Reset failed: ${err.message}`);
     } finally {
@@ -132,7 +148,9 @@ export const App: React.FC = () => {
       <Header
         state={state}
         onResetSimulation={handleResetSimulation}
+        onFetchLiveWeather={handleFetchLiveWeather}
         isSimulating={isSimulating}
+        isLiveFeed={isLiveFeed}
       />
 
       {/* 2. Navigation Module Tabs */}

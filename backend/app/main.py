@@ -1,14 +1,24 @@
 import sys
 from pathlib import Path
+try:
+    import pyrefly
+except ImportError:
+    pyrefly = None
 
-# Ensure project root is in sys.path for direct script execution and imports
+# Ensure project root and backend folder are in sys.path for direct script execution and flexible imports
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+
+for path in (PROJECT_ROOT, BACKEND_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.api.router import router
+try:
+    from backend.app.api.router import router
+except ImportError:
+    from app.api.router import router
 
 app = FastAPI(
     title="TerraLynx Decision Intelligence API",
@@ -36,6 +46,14 @@ def root():
         "tagline": "Predict. Prepare. Protect.",
         "status": "Operational",
         "docs": "/docs"
+    }
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "service": "TerraLynx Decision Intelligence API",
+        "version": "1.0.0"
     }
 
 if __name__ == "__main__":

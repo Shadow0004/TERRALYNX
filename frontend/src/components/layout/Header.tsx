@@ -5,10 +5,18 @@ import { DistrictState } from '../../types';
 interface HeaderProps {
   state: DistrictState | null;
   onResetSimulation: () => void;
+  onFetchLiveWeather: () => void;
   isSimulating: boolean;
+  isLiveFeed: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ state, onResetSimulation, isSimulating }) => {
+export const Header: React.FC<HeaderProps> = ({
+  state,
+  onResetSimulation,
+  onFetchLiveWeather,
+  isSimulating,
+  isLiveFeed,
+}) => {
   const [time, setTime] = useState<string>('');
 
   useEffect(() => {
@@ -71,6 +79,21 @@ export const Header: React.FC<HeaderProps> = ({ state, onResetSimulation, isSimu
 
       {/* Right Controls & Simulation State */}
       <div className="flex items-center space-x-3">
+        {/* Live Open-Meteo Feed Trigger */}
+        <button
+          onClick={onFetchLiveWeather}
+          disabled={isSimulating}
+          className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg font-mono text-xs transition-all ${
+            isLiveFeed
+              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500 shadow-md shadow-emerald-950'
+              : 'bg-[#141b2a] hover:bg-emerald-950/60 text-slate-300 hover:text-emerald-300 border border-[#232f48] hover:border-emerald-700/60'
+          }`}
+          title="Fetch live atmospheric, precipitation and wind data from Open-Meteo API"
+        >
+          <span className={`h-2 w-2 rounded-full ${isLiveFeed ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`}></span>
+          <span>{isLiveFeed ? 'LIVE METEO ACTIVE' : 'FETCH LIVE METEO'}</span>
+        </button>
+
         {isSimulationActive && (
           <div className="flex items-center space-x-2 bg-amber-950/60 border border-amber-600/50 rounded-lg px-2.5 py-1">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
