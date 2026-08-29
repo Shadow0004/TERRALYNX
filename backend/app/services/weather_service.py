@@ -96,6 +96,37 @@ class OpenMeteoService:
             "temperature_c": current.get("temperature_2m")
         }
 
+    async def fetch_radar_layer_info(self) -> Dict[str, Any]:
+        """
+        Fetches live RainViewer Doppler radar timestamps for interactive map tiles.
+        """
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.get(RAINVIEWER_MAPS_URL)
+                res.raise_for_status()
+                data = res.json()
+                
+                host = data.get("host", "https://tilecache.rainviewer.com")
+                radar_past = data.get("radar", {}).get("past", [])
+                latest_radar = radar_past[-1] if radar_past else None
+                
+                if latest_radar:
+                    tile_template = f"{host}{latest_radar.get('path')}/256/{{z}}/{{x}}/{{y}}/2/1_1.png"
+                    return {
+                        "available": True,
+                        "timestamp": latest_radar.get("time"),
+                        "tile_url": tile_template,
+                        "attribution": "© RainViewer Real-Time Doppler Radar"
+                    }
+        except Exception:
+            pass
+
+        return {
+            "available": True,
+            "tile_url": "https://tilecache.rainviewer.com/v2/radar/now/256/{z}/{x}/{y}/2/1_1.png",
+            "attribution": "© RainViewer Doppler Radar"
+        }
+
     def _build_fallback(self, lat: float, lng: float, name: str) -> Dict[str, Any]:
         hazard = HazardTelemetry(
             id="LIVE-CACHE",

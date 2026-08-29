@@ -36,3 +36,17 @@ def test_ai_query_endpoint():
     assert "answer" in data
     assert len(data["answer"]) > 20
     assert "grounded_metrics" in data
+
+def test_live_weather_endpoint():
+    response = client.get("/api/weather/live")
+    assert response.status_code == 200
+    data = response.json()
+    assert "hazard" in data
+    assert data["hazard"]["status"] == "LIVE_FEED"
+    assert len(data["zones"]) == 10
+
+def test_radar_endpoint():
+    response = client.get("/api/weather/radar")
+    assert response.status_code == 200
+    data = response.json()
+    assert "available" in data
