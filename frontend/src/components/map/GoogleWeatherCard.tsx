@@ -172,16 +172,29 @@ export const GoogleWeatherCard: React.FC<GoogleWeatherCardProps> = ({
           </div>
         </div>
 
-        {/* Right: Precipitation, Humidity, Wind */}
-        <div className="text-right text-[12px] space-y-0.5 text-slate-300 font-sans">
+        {/* Right: Precipitation, Humidity, Wind & Wind Direction */}
+        <div className="text-right text-[12px] space-y-1 text-slate-300 font-sans">
           <div>
             Precipitation: <span className="text-white font-medium">{precipProb}%</span>
           </div>
           <div>
             Humidity: <span className="text-white font-medium">{Math.round(data.humidity_percent)}%</span>
           </div>
-          <div>
-            Wind: <span className="text-white font-medium">{Math.round(data.wind_speed_kmh)} km/h</span>
+          <div className="flex items-center justify-end space-x-1.5">
+            <span>Wind:</span>
+            <span className="text-white font-medium">
+              {Math.round(data.wind_speed_kmh)} km/h
+            </span>
+            <span className="text-cyan-300 font-semibold flex items-center space-x-0.5">
+              <span
+                className="inline-block transform transition-transform duration-500"
+                style={{ transform: `rotate(${data.wind_direction_deg}deg)` }}
+                title={`Wind Direction: ${data.wind_direction_deg}° (${data.wind_direction_cardinal})`}
+              >
+                <ArrowUp className="w-3.5 h-3.5 text-cyan-400" />
+              </span>
+              <span>{data.wind_direction_cardinal} ({Math.round(data.wind_direction_deg)}°)</span>
+            </span>
           </div>
         </div>
       </div>
@@ -264,7 +277,7 @@ export const GoogleWeatherCard: React.FC<GoogleWeatherCardProps> = ({
               {activeTab === 'wind' && (
                 <>
                   <div
-                    className="w-5 h-5 rounded-full bg-slate-800/90 flex items-center justify-center text-cyan-400 my-0.5"
+                    className="w-5 h-5 rounded-full bg-slate-800/90 flex items-center justify-center text-cyan-400 my-0.5 shadow-inner"
                     style={{ transform: `rotate(${item.wind_direction_deg}deg)` }}
                     title={`${item.wind_direction_deg}° (${item.wind_direction_cardinal})`}
                   >
@@ -272,7 +285,10 @@ export const GoogleWeatherCard: React.FC<GoogleWeatherCardProps> = ({
                   </div>
                   <div className="font-bold text-white text-[11px] font-sans">
                     {Math.round(item.wind_speed_kmh)}
-                    <span className="text-[9px] font-normal text-slate-400 block">km/h</span>
+                    <span className="text-[8px] font-normal text-slate-400 block leading-tight">km/h</span>
+                  </div>
+                  <div className="text-[9px] text-cyan-300 font-semibold font-mono">
+                    {item.wind_direction_cardinal}
                   </div>
                 </>
               )}
