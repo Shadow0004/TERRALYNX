@@ -468,27 +468,29 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       });
     }
 
-    // Cyclone Eye Tracker Marker
+    // Cyclone Eye Tracker Marker (Only render if genuine cyclonic storm category >= 1)
     cycloneMarkerRef.current.forEach((m) => m.remove());
     cycloneMarkerRef.current = [];
 
-    const cycloneEl = document.createElement('div');
-    cycloneEl.className = 'cyclone-eye-marker flex items-center justify-center';
-    cycloneEl.innerHTML = `
-      <div class="relative flex items-center justify-center">
-        <div class="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 animate-ping absolute"></div>
-        <div class="w-24 h-24 rounded-full bg-red-600/10 border border-red-400/40 animate-pulse absolute"></div>
-        <div class="relative w-8 h-8 rounded-full bg-red-950 border-2 border-red-400 text-red-300 flex items-center justify-center shadow-2xl font-mono text-[10px] font-bold">
-          🌀 ${hazard?.category ? `C${hazard.category}` : 'EYE'}
+    if (hazard && hazard.category >= 1) {
+      const cycloneEl = document.createElement('div');
+      cycloneEl.className = 'cyclone-eye-marker flex items-center justify-center';
+      cycloneEl.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 animate-ping absolute"></div>
+          <div class="w-24 h-24 rounded-full bg-red-600/10 border border-red-400/40 animate-pulse absolute"></div>
+          <div class="relative w-8 h-8 rounded-full bg-red-950 border-2 border-red-400 text-red-300 flex items-center justify-center shadow-2xl font-mono text-[10px] font-bold">
+            🌀 C${hazard.category}
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    const cycloneMarker = new maplibregl.Marker({ element: cycloneEl })
-      .setLngLat(stormLngLat)
-      .addTo(map);
+      const cycloneMarker = new maplibregl.Marker({ element: cycloneEl })
+        .setLngLat(stormLngLat)
+        .addTo(map);
 
-    cycloneMarkerRef.current.push(cycloneMarker);
+      cycloneMarkerRef.current.push(cycloneMarker);
+    }
 
     // Smoothly fly camera to new district center
     if (hazard?.center_coordinates) {
