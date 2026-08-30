@@ -108,4 +108,19 @@ export const apiService = {
     }
     return res.json();
   },
+
+  async searchLocations(query: string): Promise<Array<{
+    title: string;
+    subtitle: string;
+    category: string;
+    category_label: string;
+    lat: number;
+    lng: number;
+  }>> {
+    const res = await fetch(`${API_BASE_URL}/location/search?query=${encodeURIComponent(query)}`);
+    if (!res.ok) {
+      throw new Error(`Location search failed: ${res.statusText}`);
+    }
+    return res.json();
+  },
 };

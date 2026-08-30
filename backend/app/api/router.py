@@ -222,3 +222,15 @@ async def get_official_demographics_endpoint(
     return get_official_census_data(district_query=district, lat=lat, lng=lng)
 
 
+@router.get("/location/search")
+async def search_locations_endpoint(
+    query: str = Query(..., description="Search query string")
+):
+    """
+    Lightning-fast multi-layer location, university, hospital, and sector search.
+    """
+    from backend.app.services.search_service import search_locations
+    return await search_locations(query=query)
+
+
+

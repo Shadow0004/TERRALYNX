@@ -1,20 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, X, Loader2, Navigation, Compass, Globe, Crosshair } from 'lucide-react';
+import { Search, MapPin, X, Loader2, Navigation, Compass, Globe, Crosshair, GraduationCap, Building2, Hospital } from 'lucide-react';
+import { apiService } from '../../services/api';
 
-export interface SearchResultItem {
-  place_id: number;
-  lat: string;
-  lon: string;
-  display_name: string;
-  type: string;
-  address?: {
-    city?: string;
-    town?: string;
-    state_district?: string;
-    county?: string;
-    state?: string;
-    country?: string;
-  };
+export interface LocationSearchResult {
+  title: string;
+  subtitle: string;
+  category: 'university' | 'hospital' | 'city' | 'suburb' | 'locality' | string;
+  category_label: string;
+  lat: number;
+  lng: number;
 }
 
 interface LocationSearchBarProps {
@@ -24,12 +18,12 @@ interface LocationSearchBarProps {
 
 const PRESET_LOCATIONS = [
   { name: 'Bhubaneswar', lat: 20.2961, lng: 85.8245, state: 'Odisha' },
-  { name: 'Puri Coast', lat: 19.8135, lng: 85.8312, state: 'Odisha' },
   { name: 'Cuttack', lat: 20.4625, lng: 85.8828, state: 'Odisha' },
-  { name: 'Chennai', lat: 13.0827, lng: 80.2707, state: 'Tamil Nadu' },
-  { name: 'Mumbai', lat: 18.9220, lng: 72.8347, state: 'Maharashtra' },
-  { name: 'Visakhapatnam', lat: 17.6868, lng: 83.2185, state: 'Andhra Pradesh' },
-  { name: 'Kolkata', lat: 22.5726, lng: 88.3639, state: 'West Bengal' },
+  { name: 'C.V. Raman University', lat: 20.2198, lng: 85.7358, state: 'Bhubaneswar' },
+  { name: 'Puri Coast', lat: 19.8135, lng: 85.8312, state: 'Odisha' },
+  { name: 'AIIMS Bhubaneswar', lat: 20.2312, lng: 85.7766, state: 'Odisha' },
+  { name: 'SCB Medical', lat: 20.4682, lng: 85.8895, state: 'Cuttack' },
+  { name: 'CDA Sector 9', lat: 20.47937, lng: 85.82872, state: 'Cuttack' },
 ];
 
 export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
@@ -37,13 +31,13 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
   isLoading = false,
 }) => {
   const [query, setQuery] = useState<string>('');
-  const [results, setResults] = useState<SearchResultItem[]>([]);
+  const [results, setResults] = useState<LocationSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search with Nominatim OpenStreetMap Search API
+  // Debounced smart search via backend unified search endpoint
   useEffect(() => {
     if (!query || query.trim().length < 2) {
       setResults([]);
@@ -53,25 +47,15 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
     const handler = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          query.trim()
-        )}&format=json&addressdetails=1&limit=6`;
-        const res = await fetch(url, {
-          headers: {
-            'User-Agent': 'TerraLynx-DisasterOps/2.0 (admin@terralynx.gov)',
-          },
-        });
-        if (res.ok) {
-          const data: SearchResultItem[] = await res.json();
-          setResults(data);
-          setIsOpen(true);
-        }
+        const searchResults = await apiService.searchLocations(query.trim());
+        setResults(searchResults as LocationSearchResult[]);
+        setIsOpen(true);
       } catch (e) {
         console.error('Failed to search location:', e);
       } finally {
         setIsSearching(false);
       }
-    }, 350);
+    }, 200);
 
     return () => clearTimeout(handler);
   }, [query]);
@@ -87,25 +71,14 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (item: SearchResultItem) => {
-    const lat = parseFloat(item.lat);
-    const lng = parseFloat(item.lon);
-    const district =
-      item.address?.state_district ||
-      item.address?.city ||
-      item.address?.town ||
-      item.address?.county ||
-      item.display_name.split(',')[0];
-    const state = item.address?.state || '';
-    const cleanName = state ? `${district}, ${state}` : district;
-
-    setQuery(cleanName);
+  const handleSelect = (item: LocationSearchResult) => {
+    setQuery(item.title);
     setIsOpen(false);
-    onSelectLocation(lat, lng, cleanName);
+    onSelectLocation(item.lat, item.lng, `${item.title} (${item.subtitle})`);
   };
 
   const handleSelectPreset = (preset: typeof PRESET_LOCATIONS[0]) => {
-    setQuery(`${preset.name}, ${preset.state}`);
+    setQuery(preset.name);
     setIsOpen(false);
     onSelectLocation(preset.lat, preset.lng, `${preset.name}, ${preset.state}`);
   };
@@ -122,14 +95,14 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
         const lng = pos.coords.longitude;
         let locName = `GPS Location (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`;
         try {
-          const revUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12`;
+          const revUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`;
           const res = await fetch(revUrl, {
             headers: { 'User-Agent': 'TerraLynx-DisasterOps/2.0' },
           });
           if (res.ok) {
             const data = await res.json();
             const addr = data.address || {};
-            const city = addr.city || addr.town || addr.state_district || addr.county || '';
+            const city = addr.suburb || addr.city || addr.town || addr.state_district || addr.county || '';
             const st = addr.state || '';
             if (city) locName = st ? `${city}, ${st}` : city;
           }
@@ -147,13 +120,26 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
     );
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'university':
+        return <GraduationCap className="w-3.5 h-3.5 text-amber-400" />;
+      case 'hospital':
+        return <Hospital className="w-3.5 h-3.5 text-rose-400" />;
+      case 'city':
+        return <Building2 className="w-3.5 h-3.5 text-cyan-400" />;
+      default:
+        return <Navigation className="w-3.5 h-3.5 text-emerald-400" />;
+    }
+  };
+
   return (
-    <div ref={dropdownRef} className="relative w-full max-w-lg z-30">
+    <div ref={dropdownRef} className="relative w-full max-w-lg z-30 font-sans">
       {/* Search Input Box */}
-      <div className="relative flex items-center bg-[#0d1322]/95 border border-[#263553] focus-within:border-cyan-400 rounded-xl shadow-2xl backdrop-blur-md transition-all">
+      <div className="relative flex items-center bg-[#0d1322]/95 border border-[#263553] focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-500/50 rounded-xl shadow-2xl backdrop-blur-md transition-all">
         <div className="pl-3.5 pr-2 text-cyan-400">
           {isSearching || isLoading || isLocating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
           ) : (
             <Search className="w-4 h-4" />
           )}
@@ -166,7 +152,7 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search City, District or Taluk (e.g. Bhubaneswar, Cuttack)..."
+          placeholder="Search University, Hospital, Sector or City (e.g. C.V. Raman, Bhubaneswar)..."
           className="w-full py-2.5 pr-16 bg-transparent text-slate-100 placeholder-slate-400 text-xs font-mono focus:outline-none"
         />
 
@@ -231,20 +217,27 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
 
           {/* Search Results List */}
           {results.length > 0 ? (
-            <div className="max-h-56 overflow-y-auto py-1 divide-y divide-[#151e30]">
-              {results.map((item) => (
+            <div className="max-h-64 overflow-y-auto py-1 divide-y divide-[#151e30]">
+              {results.map((item, idx) => (
                 <button
-                  key={item.place_id}
+                  key={idx}
                   onClick={() => handleSelect(item)}
                   className="w-full px-3 py-2 text-left hover:bg-[#151f33] transition-colors flex items-start space-x-2.5 group"
                 >
-                  <Navigation className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform mt-0.5 shrink-0" />
-                  <div className="truncate">
-                    <div className="font-semibold text-slate-200 group-hover:text-cyan-300 transition-colors truncate">
-                      {item.display_name.split(',')[0]}
+                  <div className="mt-0.5 p-1 rounded bg-[#101726] border border-[#22304d] shrink-0 group-hover:border-cyan-500/50 transition-colors">
+                    {getCategoryIcon(item.category)}
+                  </div>
+                  <div className="truncate flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-slate-200 group-hover:text-cyan-300 transition-colors truncate text-[12px]">
+                        {item.title}
+                      </div>
+                      <span className="text-[9px] text-slate-400 px-1.5 py-0.2 rounded bg-slate-800/80 border border-slate-700/60 ml-2 shrink-0">
+                        {item.category_label || item.category}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 truncate">
-                      {item.display_name}
+                    <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                      {item.subtitle}
                     </div>
                   </div>
                 </button>
