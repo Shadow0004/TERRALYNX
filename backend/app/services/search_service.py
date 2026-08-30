@@ -14,7 +14,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "C. V. Raman Global University (CVRGU)",
         "subtitle": "Mahura, Janla, Bhubaneswar, Odisha 752054",
         "category": "university",
-        "category_label": "🎓 University / Tech",
+        "category_label": "University / Tech",
         "lat": 20.2198,
         "lng": 85.7358,
         "keywords": ["c.v raman", "cv raman", "cvrgu", "cvrce", "c.v. raman", "c.v raman global university", "cv raman university", "c.v. raman college of engineering", "cvrce bbsr", "mahura", "janla"]
@@ -23,7 +23,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "IIT Bhubaneswar",
         "subtitle": "Argul, Jatni, Khordha, Odisha 752050",
         "category": "university",
-        "category_label": "🎓 National Institute",
+        "category_label": "National Institute",
         "lat": 20.1485,
         "lng": 85.6712,
         "keywords": ["iit", "iit bhubaneswar", "iit bbs", "argul", "jatni iit", "indian institute of technology bhubaneswar"]
@@ -32,7 +32,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "AIIMS Bhubaneswar",
         "subtitle": "Sijua, Patrapada, Bhubaneswar, Odisha 751019",
         "category": "hospital",
-        "category_label": "🏥 Apex Hospital / Medical",
+        "category_label": "Apex Hospital / Medical",
         "lat": 20.2312,
         "lng": 85.7766,
         "keywords": ["aiims", "aiims bhubaneswar", "aiims hospital", "sijua", "patrapada aiims", "all india institute of medical sciences"]
@@ -41,7 +41,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "KIIT Deemed to be University",
         "subtitle": "Patia, Bhubaneswar, Odisha 751024",
         "category": "university",
-        "category_label": "🎓 University Campus",
+        "category_label": "University Campus",
         "lat": 20.3533,
         "lng": 85.8189,
         "keywords": ["kiit", "kiit university", "kalinga institute of industrial technology", "patia", "kiss university"]
@@ -50,7 +50,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "SOA University / ITER",
         "subtitle": "Jagamara, Khandagiri, Bhubaneswar, Odisha 751030",
         "category": "university",
-        "category_label": "🎓 University / ITER",
+        "category_label": "University / ITER",
         "lat": 20.2520,
         "lng": 85.7950,
         "keywords": ["iter", "soa", "siksha o anusandhan", "iter bhubaneswar", "jagamara", "soa university", "institute of technical education and research"]
@@ -59,7 +59,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Silicon University (SiliconTech)",
         "subtitle": "Silicon Hills, Patia, Bhubaneswar, Odisha 751024",
         "category": "university",
-        "category_label": "🎓 Tech University",
+        "category_label": "Tech University",
         "lat": 20.3705,
         "lng": 85.8080,
         "keywords": ["silicon", "silicontech", "silicon institute", "silicon university", "silicon hills"]
@@ -68,7 +68,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Centurion University (CUTM)",
         "subtitle": "Ramachandrapur, Jatni, Bhubaneswar, Odisha 752050",
         "category": "university",
-        "category_label": "🎓 University Campus",
+        "category_label": "University Campus",
         "lat": 20.1745,
         "lng": 85.7065,
         "keywords": ["centurion", "cutm", "centurion university", "ramachandrapur"]
@@ -77,7 +77,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "GITA Autonomous College",
         "subtitle": "Madanpur, Janla, Bhubaneswar, Odisha 752054",
         "category": "university",
-        "category_label": "🎓 Engineering College",
+        "category_label": "Engineering College",
         "lat": 20.2110,
         "lng": 85.7315,
         "keywords": ["gita", "gita college", "gita autonomous", "madanpur", "gita bhubaneswar"]
@@ -86,7 +86,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Trident Academy of Technology",
         "subtitle": "Infocity Area, Chandrasekharpur, Bhubaneswar, Odisha 751024",
         "category": "university",
-        "category_label": "🎓 Tech Academy",
+        "category_label": "Tech Academy",
         "lat": 20.3470,
         "lng": 85.8115,
         "keywords": ["trident", "trident academy", "infocity trident"]
@@ -95,7 +95,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Utkal University (Vani Vihar)",
         "subtitle": "Vani Vihar, Saheed Nagar, Bhubaneswar, Odisha 751004",
         "category": "university",
-        "category_label": "🎓 State University",
+        "category_label": "State University",
         "lat": 20.3015,
         "lng": 85.8450,
         "keywords": ["utkal", "utkal university", "vani vihar", "saheed nagar"]
@@ -104,7 +104,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Ravenshaw University",
         "subtitle": "College Square, Cuttack, Odisha 753003",
         "category": "university",
-        "category_label": "🎓 Historic University",
+        "category_label": "Historic University",
         "lat": 20.4635,
         "lng": 85.8942,
         "keywords": ["ravenshaw", "ravenshaw university", "college square cuttack"]
@@ -113,7 +113,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "SCB Medical College & Hospital",
         "subtitle": "Mangalabag, Cuttack, Odisha 753007",
         "category": "hospital",
-        "category_label": "🏥 Apex Hospital",
+        "category_label": "Apex Hospital",
         "lat": 20.4682,
         "lng": 85.8895,
         "keywords": ["scb", "scb medical", "scb medical college", "scb hospital", "mangalabag"]
@@ -122,7 +122,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "National Law University Odisha (NLUO)",
         "subtitle": "Brahmabarda, CDA Sector 13, Cuttack, Odisha 753015",
         "category": "university",
-        "category_label": "🎓 Law University",
+        "category_label": "Law University",
         "lat": 20.4890,
         "lng": 85.7950,
         "keywords": ["nlu", "nluo", "national law university", "cda sector 13"]
@@ -131,7 +131,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Sri Sri University",
         "subtitle": "Bidyadharpur, Arilo, Cuttack, Odisha 754006",
         "category": "university",
-        "category_label": "🎓 University Campus",
+        "category_label": "University Campus",
         "lat": 20.4410,
         "lng": 85.7890,
         "keywords": ["sri sri", "sri sri university", "ssu", "arilo"]
@@ -140,7 +140,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "VSSUT Burla (UCE Burla)",
         "subtitle": "Burla, Sambalpur, Odisha 768018",
         "category": "university",
-        "category_label": "🎓 Tech University",
+        "category_label": "Tech University",
         "lat": 21.4975,
         "lng": 83.8760,
         "keywords": ["vssut", "vssut burla", "uce burla", "burla engineering"]
@@ -149,7 +149,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "NIT Rourkela",
         "subtitle": "Sector 1, Rourkela, Sundargarh, Odisha 769008",
         "category": "university",
-        "category_label": "🎓 National Institute",
+        "category_label": "National Institute",
         "lat": 22.2530,
         "lng": 84.9010,
         "keywords": ["nit", "nit rourkela", "nit rkl"]
@@ -160,7 +160,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Bhubaneswar Capital City",
         "subtitle": "Bhubaneswar Municipal Corporation, Khordha, Odisha 751001",
         "category": "city",
-        "category_label": "🏙️ Capital Metro",
+        "category_label": "Capital Metro",
         "lat": 20.2961,
         "lng": 85.8245,
         "keywords": ["bhubaneswar", "bhubaneshwar", "bbsr", "khordha", "smart city bhubaneswar"]
@@ -169,7 +169,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Cuttack Millennium City",
         "subtitle": "Cuttack Municipal Corporation (CMC), Cuttack, Odisha 753001",
         "category": "city",
-        "category_label": "🏙️ Municipal City",
+        "category_label": "Municipal City",
         "lat": 20.4625,
         "lng": 85.8828,
         "keywords": ["cuttack", "kataka", "cmc cuttack", "silver city"]
@@ -178,7 +178,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "CDA Sector 9, Cuttack",
         "subtitle": "Bidanasi Colony, CDA Sector 9, Cuttack, Odisha 753014",
         "category": "suburb",
-        "category_label": "📍 Municipal Sector",
+        "category_label": "Municipal Sector",
         "lat": 20.47937,
         "lng": 85.82872,
         "keywords": ["cda sector 9", "cda sec 9", "cda 9", "cda sector 9 cuttack", "bidanasi sector 9"]
@@ -187,7 +187,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "CDA Sector 6, Cuttack",
         "subtitle": "CDA Sector 6, Cuttack, Odisha 753014",
         "category": "suburb",
-        "category_label": "📍 Municipal Sector",
+        "category_label": "Municipal Sector",
         "lat": 20.47658,
         "lng": 85.84028,
         "keywords": ["cda sector 6", "cda sec 6", "cda 6", "cda sector vi"]
@@ -196,7 +196,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "CDA Sector 10, Cuttack",
         "subtitle": "CDA Sector 10, Cuttack, Odisha 753014",
         "category": "suburb",
-        "category_label": "📍 Municipal Sector",
+        "category_label": "Municipal Sector",
         "lat": 20.48354,
         "lng": 85.81933,
         "keywords": ["cda sector 10", "cda sec 10", "cda 10"]
@@ -205,7 +205,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "CDA Sector 11, Cuttack",
         "subtitle": "CDA Sector 11, Cuttack, Odisha 753014",
         "category": "suburb",
-        "category_label": "📍 Municipal Sector",
+        "category_label": "Municipal Sector",
         "lat": 20.47979,
         "lng": 85.81866,
         "keywords": ["cda sector 11", "cda sec 11", "cda 11"]
@@ -214,7 +214,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Puri Coastal City",
         "subtitle": "Puri Municipality, Puri District, Odisha 752001",
         "category": "city",
-        "category_label": "🏖️ Coastal City",
+        "category_label": "Coastal City",
         "lat": 19.8135,
         "lng": 85.8312,
         "keywords": ["puri", "puri beach", "puri coast", "jagannath puri"]
@@ -223,7 +223,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Paradeep Port Area",
         "subtitle": "Paradeep Municipality, Jagatsinghpur, Odisha 754142",
         "category": "city",
-        "category_label": "⚓ Port City",
+        "category_label": "Port City",
         "lat": 20.3160,
         "lng": 86.6110,
         "keywords": ["paradeep", "paradip", "paradeep port"]
@@ -232,7 +232,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Balasore Town",
         "subtitle": "Balasore Municipality, Balasore, Odisha 756001",
         "category": "city",
-        "category_label": "🏙️ Coastal District",
+        "category_label": "Coastal District",
         "lat": 21.4934,
         "lng": 86.9135,
         "keywords": ["balasore", "baleswar", "chandipur"]
@@ -241,7 +241,7 @@ COMPREHENSIVE_GAZETTEER = [
         "title": "Berhampur Silk City",
         "subtitle": "Berhampur Municipal Corporation (BeMC), Ganjam, Odisha 760001",
         "category": "city",
-        "category_label": "🏙️ Municipal City",
+        "category_label": "Municipal City",
         "lat": 19.3150,
         "lng": 84.7941,
         "keywords": ["berhampur", "brahmapur", "ganjam", "gopalpur"]
@@ -252,7 +252,7 @@ def clean_search_term(term: str) -> str:
     if not term:
         return ""
     t = term.lower().strip()
-    t = re.sub(r'[\.\,\-\_\/\(\)'"\#]', ' ', t)
+    t = re.sub(r'[\.\,\-\_\/\(\)\'\"\#]', ' ', t)
     t = re.sub(r'\s+', ' ', t).strip()
     # Common phonetic and vernacular variants
     t = t.replace('bhubaneshwar', 'bhubaneswar')
@@ -332,9 +332,9 @@ async def search_photon_osm_live(query: str) -> List[Dict[str, Any]]:
                           "hospital" if any(w in name.lower() for w in ["hospital", "medical", "clinic", "health"]) else \
                           "city" if osm_type in ("city", "town", "administrative") else "locality"
                           
-                    cat_label = "🎓 University / Institute" if cat == "university" else \
-                                "🏥 Hospital" if cat == "hospital" else \
-                                "🏙️ City / Region" if cat == "city" else "📍 Location"
+                    cat_label = "University / Institute" if cat == "university" else \
+                                "Hospital" if cat == "hospital" else \
+                                "City / Region" if cat == "city" else "Location"
 
                     results.append({
                         "title": name,

@@ -615,6 +615,15 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-4">
         <LocationSearchBar
           onSelectLocation={(lat, lng, locName) => {
+            if (mapInstance) {
+              mapInstance.flyTo({
+                center: [lng, lat],
+                zoom: 14.5,
+                speed: 1.5,
+                curve: 1.2,
+                essential: true,
+              });
+            }
             setPinpointCoords([lng, lat]);
             if (onSetSimulationFocus) onSetSimulationFocus(lat, lng, locName);
           }}

@@ -19,7 +19,7 @@ interface LocationSearchBarProps {
 const PRESET_LOCATIONS = [
   { name: 'Bhubaneswar', lat: 20.2961, lng: 85.8245, state: 'Odisha' },
   { name: 'Cuttack', lat: 20.4625, lng: 85.8828, state: 'Odisha' },
-  { name: 'C.V. Raman University', lat: 20.2198, lng: 85.7358, state: 'Bhubaneswar' },
+  { name: 'C. V. Raman University', lat: 20.2198, lng: 85.7358, state: 'Bhubaneswar' },
   { name: 'Puri Coast', lat: 19.8135, lng: 85.8312, state: 'Odisha' },
   { name: 'AIIMS Bhubaneswar', lat: 20.2312, lng: 85.7766, state: 'Odisha' },
   { name: 'SCB Medical', lat: 20.4682, lng: 85.8895, state: 'Cuttack' },
@@ -35,12 +35,14 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Debounced smart search via backend unified search endpoint
   useEffect(() => {
     if (!query || query.trim().length < 2) {
       setResults([]);
+      setSelectedIndex(-1);
       return;
     }
 
@@ -50,12 +52,13 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
         const searchResults = await apiService.searchLocations(query.trim());
         setResults(searchResults as LocationSearchResult[]);
         setIsOpen(true);
+        setSelectedIndex(-1);
       } catch (e) {
         console.error('Failed to search location:', e);
       } finally {
         setIsSearching(false);
       }
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(handler);
   }, [query]);
@@ -81,6 +84,38 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
     setQuery(preset.name);
     setIsOpen(false);
     onSelectLocation(preset.lat, preset.lng, `${preset.name}, ${preset.state}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen || results.length === 0) {
+      if (e.key === 'Enter' && query.trim().length >= 2) {
+        setIsSearching(true);
+        apiService.searchLocations(query.trim()).then((res) => {
+          setIsSearching(false);
+          if (res && res.length > 0) {
+            handleSelect(res[0] as LocationSearchResult);
+          }
+        });
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && selectedIndex < results.length) {
+        handleSelect(results[selectedIndex]);
+      } else if (results.length > 0) {
+        handleSelect(results[0]);
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
   };
 
   const handleDetectGPS = () => {
@@ -151,7 +186,10 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
             setQuery(e.target.value);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => {
+            if (query.trim().length >= 2 || results.length > 0) setIsOpen(true);
+          }}
           placeholder="Search University, Hospital, Sector or City (e.g. C.V. Raman, Bhubaneswar)..."
           className="w-full py-2.5 pr-16 bg-transparent text-slate-100 placeholder-slate-400 text-xs font-mono focus:outline-none"
         />
@@ -222,7 +260,9 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
                 <button
                   key={idx}
                   onClick={() => handleSelect(item)}
-                  className="w-full px-3 py-2 text-left hover:bg-[#151f33] transition-colors flex items-start space-x-2.5 group"
+                  className={`w-full px-3 py-2 text-left transition-colors flex items-start space-x-2.5 group ${
+                    selectedIndex === idx ? 'bg-[#1a263d] border-l-2 border-cyan-400' : 'hover:bg-[#151f33]'
+                  }`}
                 >
                   <div className="mt-0.5 p-1 rounded bg-[#101726] border border-[#22304d] shrink-0 group-hover:border-cyan-500/50 transition-colors">
                     {getCategoryIcon(item.category)}
