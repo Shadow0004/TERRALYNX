@@ -84,6 +84,11 @@ export interface Shelter {
   current_occupancy: number;
   safety_score: number;
   is_active: boolean;
+  is_govt_verified?: boolean;
+  verification_agency?: string;
+  facility_code?: string;
+  structural_certification?: string;
+  nodal_officer?: string;
   has_backup_power: boolean;
   has_medical_station: boolean;
   water_capacity_liters: number;
@@ -159,11 +164,15 @@ export interface EvacuationRoute {
   from_zone_name: string;
   to_shelter_id: string;
   to_shelter_name: string;
+  is_govt_verified?: boolean;
+  shelter_verification_badge?: string;
   path_coordinates: [number, number][];
   total_distance_km: number;
   shortest_distance_km?: number;
+  elevation_gain_m?: number;
   estimated_travel_time_mins: number;
   route_risk_level: string;
+  route_type_label?: string;
   used_road_ids: string[];
   unsafe_road_warnings: string[];
   route_selection_rationale?: string;

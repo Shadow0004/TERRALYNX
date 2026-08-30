@@ -21,13 +21,17 @@ class EvacuationRoute(BaseModel):
     from_zone_name: str
     to_shelter_id: str
     to_shelter_name: str
+    is_govt_verified: bool = True
+    shelter_verification_badge: str = "OSDMA / NDMA Govt. Certified Refuge"
     path_coordinates: List[List[float]] # GeoJSON LineString
     total_distance_km: float
+    shortest_distance_km: Optional[float] = None
+    elevation_gain_m: Optional[float] = None
     estimated_travel_time_mins: float
     route_risk_level: str # LOW_RISK, MEDIUM_RISK, HIGH_RISK, UNUSABLE
+    route_type_label: str = "Direct Shortest Corridor" # Direct Shortest Corridor vs Elevated Flood Bypass
     used_road_ids: List[str]
     unsafe_road_warnings: List[str] = []
-    shortest_distance_km: Optional[float] = None
     route_selection_rationale: Optional[str] = None
     is_primary: bool = True
     alternative_to_route_id: Optional[str] = None

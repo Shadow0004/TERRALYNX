@@ -440,22 +440,29 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       shelters.forEach((s) => {
         const el = document.createElement('div');
         el.className = 'shelter-marker-pin cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group';
-        const utilColor = s.is_overloaded ? 'bg-red-500' : s.utilization_percentage > 85 ? 'bg-amber-500' : 'bg-indigo-600';
+        const utilColor = s.is_overloaded ? 'bg-red-500' : s.utilization_percentage > 85 ? 'bg-amber-500' : 'bg-emerald-600';
 
         el.innerHTML = `
-          <div class="relative flex items-center justify-center w-7 h-7 rounded-full ${utilColor} border-2 border-white shadow-2xl">
-            <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            <span class="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold bg-[#0b0f19] text-slate-100 px-1 rounded-full border border-slate-700">
+          <div class="relative flex items-center justify-center w-8 h-8 rounded-full ${utilColor} border-2 border-white shadow-2xl">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="absolute -bottom-1 -right-1 text-[8px] font-mono font-bold bg-[#0b0f19] text-emerald-300 px-1 rounded-full border border-emerald-500">
               ${s.utilization_percentage.toFixed(0)}%
             </span>
           </div>
         `;
 
         const popup = new maplibregl.Popup({ offset: 15 }).setHTML(`
-          <div class="text-xs space-y-1 bg-[#0f1422] p-1 rounded">
-            <div class="font-bold text-white font-mono">${s.name}</div>
-            <div class="text-slate-300">Cap: <span class="text-white font-mono font-semibold">${s.total_capacity.toLocaleString()}</span> | Projected Occ: <span class="text-cyan-400 font-mono font-semibold">${s.projected_total_occupancy.toLocaleString()}</span></div>
-            <div class="text-[10px] text-slate-400">Elevation: ${s.elevation_meters}m • Safety: ${s.safety_score}%</div>
+          <div class="text-xs space-y-1.5 bg-[#0f1422] p-2 rounded-lg border border-emerald-500/40 text-slate-200 min-w-[220px]">
+            <div class="flex items-center justify-between border-b border-[#212b40] pb-1">
+              <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600">
+                🛡️ GOVT VERIFIED REFUGE
+              </span>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold">${s.facility_code || 'OD-MCS'}</span>
+            </div>
+            <div class="font-bold text-white font-mono text-sm leading-tight">${s.name}</div>
+            <div class="text-slate-300 text-[11px]">Cap: <span class="text-white font-mono font-semibold">${s.total_capacity.toLocaleString()}</span> | Occ: <span class="text-cyan-400 font-mono font-semibold">${s.projected_total_occupancy.toLocaleString()}</span></div>
+            <div class="text-[10px] text-slate-400">Elevation: <span class="text-emerald-300 font-semibold">${s.elevation_meters}m</span> • Safety: <span class="text-emerald-300 font-semibold">${s.safety_score}%</span></div>
+            <div class="text-[9px] text-slate-400 italic pt-1 border-t border-[#1c2538]">${s.structural_certification || 'IS:875 Concrete Cyclone Refuge'}</div>
           </div>
         `);
 

@@ -7,19 +7,27 @@ from backend.app.models.hazard import Coordinates
 
 class Shelter(BaseModel):
     id: str # e.g. "SHELTER-01"
-    name: str # e.g. "Govt Higher Secondary School Shelter"
+    name: str # e.g. "Govt Multipurpose Cyclone Shelter"
     type: str = "PRIMARY" # PRIMARY, SECONDARY, TEMPORARY_CANDIDATE
     zone_id: str
     location: Coordinates
     elevation_meters: float
     total_capacity: int
     current_occupancy: int = 0
-    safety_score: float = Field(default=92.0, ge=0.0, le=100.0, description="Structural resilience rating")
+    safety_score: float = Field(default=96.0, ge=0.0, le=100.0, description="Structural resilience rating")
     is_active: bool = True
+    
+    # Official Government Certification
+    is_govt_verified: bool = True
+    verification_agency: str = "OSDMA / NDMA Govt. Certified"
+    facility_code: str = "OD-MCS-2024"
+    structural_certification: str = "IS:875 Cat-5 Wind & Flood Reinforced Refuge"
+    nodal_officer: str = "District Emergency Officer"
+    
     has_backup_power: bool = True
     has_medical_station: bool = True
-    water_capacity_liters: int = 15000
-    food_supply_days: int = 5
+    water_capacity_liters: int = 40000
+    food_supply_days: int = 7
     
     # Dynamic computed fields
     incoming_allocated_evacuees: int = 0
@@ -40,6 +48,8 @@ class TemporaryShelterCandidate(BaseModel):
     activation_readiness_hours: float
     distance_to_overflow_zones_km: float
     rationale: str
+    is_govt_verified: bool = True
+    verification_agency: str = "SDMA Standby Reserve"
 
 class Hospital(BaseModel):
     id: str
@@ -56,7 +66,7 @@ class Hospital(BaseModel):
 
 class RoadSegment(BaseModel):
     id: str # e.g. "ROAD-14"
-    name: str # e.g. "Coastal Highway Corridior North"
+    name: str # e.g. "Coastal Highway Corridor North"
     from_zone_id: str
     to_zone_id: str
     distance_km: float

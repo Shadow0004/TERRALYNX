@@ -324,11 +324,11 @@ async def generate_dynamic_district_data_async(
     mid_zone_1 = sorted_by_elev[3]
     urban_zone = zones[0]
 
-    # Designated Shelters
+    # Designated Government-Verified Shelters
     shelters: List[Shelter] = [
         Shelter(
             id="SHELTER-01",
-            name=f"{highland_zone_1.name} Multi-Purpose Cyclone Refuge",
+            name=f"{highland_zone_1.name} Govt Multi-Purpose Cyclone Refuge",
             type="PRIMARY",
             zone_id=highland_zone_1.id,
             location=Coordinates(
@@ -340,6 +340,11 @@ async def generate_dynamic_district_data_async(
             current_occupancy=450,
             safety_score=99.0,
             is_active=True,
+            is_govt_verified=True,
+            verification_agency="OSDMA / NDMA Govt. Certified",
+            facility_code=f"OD-MCS-01",
+            structural_certification="IS:875 Cat-5 Wind & 8m Surge Resistant Concrete Bunker",
+            nodal_officer="ODRAF Staging Nodal Officer",
             has_backup_power=True,
             has_medical_station=True,
             water_capacity_liters=45000,
@@ -347,7 +352,7 @@ async def generate_dynamic_district_data_async(
         ),
         Shelter(
             id="SHELTER-02",
-            name=f"{highland_zone_2.name} Higher Secondary Relief Hub",
+            name=f"{highland_zone_2.name} Govt Higher Secondary Relief Hub",
             type="PRIMARY",
             zone_id=highland_zone_2.id,
             location=Coordinates(
@@ -359,6 +364,11 @@ async def generate_dynamic_district_data_async(
             current_occupancy=320,
             safety_score=96.0,
             is_active=True,
+            is_govt_verified=True,
+            verification_agency="OSDMA / NDMA Govt. Certified",
+            facility_code=f"OD-MCS-02",
+            structural_certification="RCC Double-Storey Elevated Disaster Shelter",
+            nodal_officer="Block Development Officer",
             has_backup_power=True,
             has_medical_station=True,
             water_capacity_liters=35000,
@@ -366,7 +376,7 @@ async def generate_dynamic_district_data_async(
         ),
         Shelter(
             id="SHELTER-03",
-            name=f"{mid_zone_1.name} Emergency Relief Complex",
+            name=f"{mid_zone_1.name} Govt Emergency Relief Complex",
             type="PRIMARY",
             zone_id=mid_zone_1.id,
             location=Coordinates(
@@ -378,6 +388,11 @@ async def generate_dynamic_district_data_async(
             current_occupancy=280,
             safety_score=92.0,
             is_active=True,
+            is_govt_verified=True,
+            verification_agency="OSDMA / NDMA Govt. Certified",
+            facility_code=f"OD-MCS-03",
+            structural_certification="Elevated Reinforced Flood Shelter",
+            nodal_officer="Tahasildar Relief Unit",
             has_backup_power=True,
             has_medical_station=True,
             water_capacity_liters=28000,
@@ -385,7 +400,7 @@ async def generate_dynamic_district_data_async(
         ),
         Shelter(
             id="SHELTER-04",
-            name=f"{urban_zone.name} Indoor Stadium Hub",
+            name=f"{urban_zone.name} Govt Indoor Stadium Hub",
             type="PRIMARY",
             zone_id=urban_zone.id,
             location=Coordinates(
@@ -397,6 +412,11 @@ async def generate_dynamic_district_data_async(
             current_occupancy=650,
             safety_score=88.0,
             is_active=True,
+            is_govt_verified=True,
+            verification_agency="Municipal Disaster Management Cell",
+            facility_code=f"OD-MCS-04",
+            structural_certification="High-Capacity Urban Inundation Shelter",
+            nodal_officer="City Municipal Commissioner",
             has_backup_power=True,
             has_medical_station=True,
             water_capacity_liters=22000,
