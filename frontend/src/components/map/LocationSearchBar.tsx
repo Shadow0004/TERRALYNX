@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, X, Loader2, Navigation, Compass, Globe } from 'lucide-react';
+import { Search, MapPin, X, Loader2, Navigation, Compass, Globe, Crosshair } from 'lucide-react';
 
 export interface SearchResultItem {
   place_id: number;
@@ -39,6 +39,7 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
   const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -109,12 +110,49 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
     onSelectLocation(preset.lat, preset.lng, `${preset.name}, ${preset.state}`);
   };
 
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        let locName = `GPS Location (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`;
+        try {
+          const revUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12`;
+          const res = await fetch(revUrl, {
+            headers: { 'User-Agent': 'TerraLynx-DisasterOps/2.0' },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const city = addr.city || addr.town || addr.state_district || addr.county || '';
+            const st = addr.state || '';
+            if (city) locName = st ? `${city}, ${st}` : city;
+          }
+        } catch (_) {}
+        setQuery(locName);
+        setIsLocating(false);
+        setIsOpen(false);
+        onSelectLocation(lat, lng, locName);
+      },
+      (err) => {
+        setIsLocating(false);
+        alert(`Could not detect current location: ${err.message}`);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
   return (
     <div ref={dropdownRef} className="relative w-full max-w-lg z-30">
       {/* Search Input Box */}
       <div className="relative flex items-center bg-[#0d1322]/95 border border-[#263553] focus-within:border-cyan-400 rounded-xl shadow-2xl backdrop-blur-md transition-all">
         <div className="pl-3.5 pr-2 text-cyan-400">
-          {isSearching || isLoading ? (
+          {isSearching || isLoading || isLocating ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Search className="w-4 h-4" />
@@ -128,9 +166,20 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search City, District or Area (e.g. Bhubaneswar, Puri, Cuttack)..."
-          className="w-full py-2.5 pr-8 bg-transparent text-slate-100 placeholder-slate-400 text-xs font-mono focus:outline-none"
+          placeholder="Search City, District or Taluk (e.g. Bhubaneswar, Cuttack)..."
+          className="w-full py-2.5 pr-16 bg-transparent text-slate-100 placeholder-slate-400 text-xs font-mono focus:outline-none"
         />
+
+        {/* GPS Current Location Quick Button */}
+        <button
+          onClick={handleDetectGPS}
+          disabled={isLocating}
+          title="Detect my current location via GPS"
+          className="p-1.5 mr-1 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/60 rounded-lg transition-all"
+        >
+          <Crosshair className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+        </button>
+
         {query && (
           <button
             onClick={() => {
@@ -147,10 +196,20 @@ export const LocationSearchBar: React.FC<LocationSearchBarProps> = ({
       {/* Autocomplete Dropdown */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#0b101c]/98 border border-[#263553] rounded-xl shadow-2xl overflow-hidden backdrop-blur-lg animate-in fade-in zoom-in-95 duration-100 text-xs font-mono">
+          {/* Quick GPS Location Bar */}
+          <button
+            onClick={handleDetectGPS}
+            disabled={isLocating}
+            className="w-full px-3 py-2 bg-[#121c2e] hover:bg-cyan-950/90 text-cyan-300 border-b border-[#1b253b] text-left flex items-center space-x-2 transition-colors font-bold"
+          >
+            <Crosshair className={`w-3.5 h-3.5 text-cyan-400 ${isLocating ? 'animate-spin' : 'animate-pulse'}`} />
+            <span>{isLocating ? 'Detecting GPS coordinates...' : '📍 Use My Exact Current Location'}</span>
+          </button>
+
           {/* Quick Preset Chips */}
           <div className="p-2 border-b border-[#1b253b] bg-[#070b14]/90">
             <div className="text-[10px] text-slate-400 mb-1.5 px-1 flex items-center justify-between">
-              <span>Quick Tactical Presets:</span>
+              <span>Quick Regional Presets:</span>
               <span className="text-cyan-400 flex items-center space-x-1">
                 <Globe className="w-2.5 h-2.5" />
                 <span>Global Coverage</span>
