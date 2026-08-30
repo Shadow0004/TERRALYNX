@@ -192,3 +192,18 @@ async def get_regional_wind_grid(
     """
     return await weather_service.fetch_regional_wind_grid(center_lat=lat, center_lng=lng, radius_deg=radius_deg)
 
+
+@router.get("/demographics/official")
+async def get_official_demographics_endpoint(
+    district: str = Query(..., description="District, city or area name"),
+    lat: Optional[float] = Query(None, description="Optional center latitude"),
+    lng: Optional[float] = Query(None, description="Optional center longitude")
+):
+    """
+    Returns authentic government census, demographic vulnerability, housing vulnerability,
+    and administrative breakdown metrics for the requested district or city.
+    """
+    from backend.app.services.census_service import get_official_census_data
+    return get_official_census_data(district_query=district, lat=lat, lng=lng)
+
+

@@ -68,6 +68,7 @@ class DistrictState(BaseModel):
     priority_actions: List[PriorityActionItem]
     temporary_shelter_candidates: List[TemporaryShelterCandidate]
     kpis: OperationalKPIs
+    official_census: Optional[Dict[str, Any]] = None
     simulation_diff: Optional[SimulationComparisonDiff] = None
     overrides_applied: SimulationOverrides = Field(default_factory=SimulationOverrides)
 

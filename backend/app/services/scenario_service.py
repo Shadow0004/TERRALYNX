@@ -29,6 +29,7 @@ from backend.app.services.data_loader import (
     get_seed_hospitals,
     get_seed_roads
 )
+from backend.app.services.census_service import get_official_census_data
 from backend.app.engine.hazard_impact import calculate_zone_hazard_impact
 from backend.app.engine.exposure import calculate_zone_exposure
 from backend.app.engine.shelter_optimizer import optimize_shelter_allocation
@@ -45,6 +46,7 @@ class ScenarioService:
         self.raw_temp_shelters = get_seed_temporary_shelter_candidates()
         self.raw_hospitals = get_seed_hospitals()
         self.raw_roads = get_seed_roads()
+        self.official_census = get_official_census_data("Cuttack", 20.48, 85.83)
 
     async def set_dynamic_district(
         self,
@@ -67,6 +69,7 @@ class ScenarioService:
         self.raw_temp_shelters = temp_shelters
         self.raw_hospitals = hospitals
         self.raw_roads = roads
+        self.official_census = get_official_census_data(district_name, lat, lng)
 
     def run_pipeline(self, overrides: Optional[SimulationOverrides] = None) -> DistrictState:
         """Executes the full deterministic calculation pipeline."""
@@ -188,6 +191,7 @@ class ScenarioService:
             priority_actions=priority_actions,
             temporary_shelter_candidates=temp_shelters,
             kpis=kpis,
+            official_census=self.official_census,
             overrides_applied=overrides
         )
 

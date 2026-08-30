@@ -16,7 +16,7 @@ import { WindStreamOverlay } from './WindStreamOverlay';
 import { PointInspectorPopup } from './PointInspectorPopup';
 import { LocationSearchBar } from './LocationSearchBar';
 import { DemographicsCard } from './DemographicsCard';
-import { Users, Info } from 'lucide-react';
+import { Users, Info, Landmark } from 'lucide-react';
 
 interface RiskMapProps {
   zones: Zone[];
@@ -651,19 +651,19 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         />
       </div>
 
-      {/* Top Right Controls: Demographics Button */}
+      {/* Top Right Controls: Official Demographics & Census Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
         {fullState && (
           <button
             onClick={() => setShowDemographics(!showDemographics)}
             className={`px-3 py-2 rounded-xl text-xs font-mono font-bold shadow-2xl backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
               showDemographics
-                ? 'bg-cyan-600 text-slate-950 border-cyan-400'
-                : 'bg-[#0d1322]/95 hover:bg-[#151f35] text-cyan-300 border-[#263553]'
+                ? 'bg-cyan-500 text-slate-950 border-cyan-300 font-extrabold shadow-cyan-500/30'
+                : 'bg-[#0d1322]/95 hover:bg-[#151f35] text-cyan-300 border-[#263553] hover:border-cyan-500/50'
             }`}
           >
-            <Users className="w-3.5 h-3.5" />
-            <span>Demographics</span>
+            <Landmark className="w-3.5 h-3.5" />
+            <span>Official Demographics</span>
           </button>
         )}
       </div>

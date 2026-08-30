@@ -261,6 +261,51 @@ export interface SimulationOverrides {
   available_teams_override?: number;
 }
 
+export interface OfficialCensusData {
+  district_name: string;
+  state: string;
+  administrative_hq: string;
+  governing_body: string;
+  total_population: number;
+  urban_population: number;
+  rural_population: number;
+  area_sq_km: number;
+  population_density_per_sq_km: number;
+  sex_ratio: string;
+  literacy_rate_percent: number;
+  male_literacy_percent: number;
+  female_literacy_percent: number;
+  children_0_6_count: number;
+  children_percent: number;
+  elderly_60_plus_count: number;
+  elderly_percent: number;
+  kutcha_housing_percent: number;
+  slum_population_percent: number;
+  medical_dependency_estimate: number;
+  administrative_units: {
+    tehsils: number;
+    blocks: number;
+    gram_panchayats: number;
+    villages: number;
+    municipal_wards: number;
+    municipalities: string[];
+  };
+  hazard_vulnerability_profile: {
+    cyclone_risk_zone: string;
+    flood_inundation_risk: string;
+    seismic_zone: string;
+    major_river_basins: string[];
+  };
+  critical_health_infrastructure: {
+    apex_medical_college: string;
+    specialized_institutes: string;
+    community_health_centers: number;
+    primary_health_centers: number;
+    registered_ambulances: number;
+  };
+  source: string;
+}
+
 export interface DistrictState {
   hazard: HazardTelemetry;
   zones: Zone[];
@@ -274,6 +319,7 @@ export interface DistrictState {
   priority_actions: PriorityActionItem[];
   temporary_shelter_candidates: TemporaryShelterCandidate[];
   kpis: OperationalKPIs;
+  official_census?: OfficialCensusData;
   simulation_diff?: SimulationComparisonDiff;
   overrides_applied: SimulationOverrides;
 }
