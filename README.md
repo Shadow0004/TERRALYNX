@@ -1,254 +1,284 @@
-# TERRALYNX • Initial Version
-### Technical Architecture & Operational Documentation
-**PREDICTIVE • DETERMINISTIC • GEOSPATIAL • OPERATIONAL**
+# 🌐 TERRALYNX (v2.0)
+### Autonomous Geospatial Incident Command System & Disaster Operations Decision Platform
+
+<div align="center">
+
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.13-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109.2-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.2.0-61DAFB.svg?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.2-3178C6.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.4.3-646CFF.svg?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-3.6.2-396B94.svg)](https://maplibre.org/)
+[![Tests](https://img.shields.io/badge/Pytest-15%2F15%20Passing-emerald.svg)](https://pytest.org/)
+[![License](https://img.shields.io/badge/License-MIT-amber.svg)](LICENSE)
+
+<p align="center">
+  <b>Predict. Optimize. Mobilize. Protect.</b><br>
+  <i>Transforming extreme hydrometeorological crisis response from reactive post-disaster relief into predictive, deterministic geospatial logistics and autonomous evacuation coordination.</i>
+</p>
+
+</div>
 
 ---
 
-## 01 / Overview
+## 📖 Table of Contents
+- [Executive Overview](#-executive-overview)
+- [System Architecture](#-system-architecture)
+- [The 7 Core Modules](#-the-7-core-modules)
+- [Mathematical Decision Models](#-mathematical-decision-models)
+- [Emergency Fleet & Logistics Sizing](#-emergency-fleet--logistics-sizing)
+- [Project Directory Structure](#-project-directory-structure)
+- [Getting Started](#-getting-started)
+- [REST API Specifications](#-rest-api-specifications)
+- [Data Integrity & Engineering Principles](#-data-integrity--engineering-principles)
 
-TERRALYNX is a disaster-management decision support platform designed to move emergency operations from reactive post-crisis response toward predictive, deterministic geospatial planning.
+---
 
-The initial version focuses on extreme hydrometeorological disasters including super cyclones, storm surges, and delta flash floods, with an initial geographic focus on vulnerable coastal and delta regions of Odisha, India.
+## ⚡ Executive Overview
 
-### Primary Geographic Focus
-**Mahanadi River Basin • Cuttack Millennium City • CDA sectors • Bhubaneswar**
+Coastal and river delta regions in Eastern India—specifically **Odisha's Mahanadi Basin, Cuttack Millennium City, and Bhubaneswar**—face recurring Category 4/5 super cyclones, extreme cloudbursts ($>250\text{mm}/24\text{h}$), and low-elevation coastal storm surges.
 
-### Core Concept
+**TERRALYNX** is an end-to-end incident command platform built to answer the primary operational question:
+> **"Given current and predicted storm telemetry, what exact actions, fleets, routes, and shelter allocations must be authorized right now?"**
+
+### The Core Operational Loop
 ```text
-LIVE DATA ➔ RISK CALCULATION ➔ EVACUATION & LOGISTICS PLANNING ➔ COMMAND-CENTER DECISION SUPPORT
+┌─────────────────────────┐     ┌────────────────────────┐     ┌────────────────────────┐
+│   LIVE DATA INGESTION   │ ──► │  HAZARD & VULNERABILITY│ ──► │ ASSISTED EVACUATION    │
+│ Open-Meteo, OSM, Census │     │     IMPACT ENGINE      │     │    DEMAND MODELING     │
+└─────────────────────────┘     └────────────────────────┘     └────────────────────────┘
+                                                                           │
+┌─────────────────────────┐     ┌────────────────────────┐                 ▼
+│  COMMAND-CENTER HUD &   │ ◄── │ RESOURCE FLEET SIZING  │ ◄── ┌────────────────────────┐
+│ CELL BROADCAST (CAP)    │     │   & SHORTFALL MATRIX   │     │ CAPACITY-CONSTRAINED   │
+└─────────────────────────┘     └────────────────────────┘     │   SHELTER OPTIMIZATION │
+             │                                                 └────────────────────────┘
+             ▼
+┌─────────────────────────┐
+│ WHAT-IF SIMULATOR WITH  │
+│ AUTO-MITIGATION ENGINE  │
+└─────────────────────────┘
 ```
 
 ---
 
-## 02 / Technology Stack
+## 🏛️ System Architecture
 
-| Component | Stack |
-|---|---|
-| **BACKEND** | Python 3.11/3.13 • FastAPI • Pydantic v2 • Uvicorn • Requests |
-| **FRONTEND** | React 18 • TypeScript • Vite • Tailwind CSS • Lucide React |
-| **MAPPING** | MapLibre GL • OpenStreetMap Overpass QL |
-| **WEATHER** | Open-Meteo live/hourly meteorological telemetry |
-| **SEARCH** | Photon / Komoot geocoding |
-| **DEMOGRAPHICS** | Official Government Census demographic profiles |
-| **VISUALIZATION** | Canvas/GPU wind particles • radar • choropleth risk • inspection HUDs |
+```mermaid
+flowchart TD
+    subgraph DataSources["1. Live Data & Geospatial Ingestion"]
+        A1[Open-Meteo Live API<br/>Rainfall, Wind, Gusts, Azimuth, Pressure]
+        A2[OpenStreetMap Overpass QL<br/>Dynamic Municipal Sectors & Wards]
+        A3[Photon Geocoding<br/>Campuses, Hospitals & Landmarks]
+        A4[Official Census HUD<br/>Kutcha Housing, Density & Medical Fragility]
+    end
 
----
+    subgraph BackendCore["2. FastAPI Deterministic Decision Core"]
+        B1[Hazard Impact Engine<br/>Multi-Factor Zone Vulnerability]
+        B2[Exposure Engine<br/>Assisted Evacuation Requirements]
+        B3[Shelter Optimizer Engine<br/>Linear Capacity-Constrained Allocation]
+        B4[Evacuation Routing Engine<br/>Topographic Elevation & Flood Avoidance]
+        B5[Resource Logistics Engine<br/>Fleet Sizing & Mutual-Aid Deficits]
+        B6[What-If Simulation Engine<br/>Differential Matrix Analysis & Auto-Mitigate]
+    end
 
-## 03 / System Architecture
+    subgraph FrontendPlatform["3. Tactical Command Dashboard (React 18 + MapLibre)"]
+        C1[Incident Command Center<br/>CAP Cell Broadcast & Directives]
+        C2[Geospatial Risk & Weather Map<br/>Wind Stream Particles & Google Weather Card]
+        C3[Shelter & Camp Planner]
+        C4[Dynamic Route Corridors Viewer]
+        C5[Logistics & Fleet Matrix]
+        C6[What-If Operational Simulator]
+        C7[Grounded AI Decision Assistant]
+    end
 
-TERRALYNX separates external data collection, deterministic computation, API delivery, and interface rendering. This prevents live-service changes or failures from silently altering the decision logic.
-
-### System Flow
-```text
-EXTERNAL DATA ➔ SERVICE LAYER ➔ DECISION ENGINES ➔ FASTAPI ➔ REACT / MAPLIBRE
-```
-
-- **Service layer** — obtains and normalizes weather, geospatial, search, demographic, and scenario data.
-- **Decision layer** — calculates zone risk, evacuation demand, shelter allocation, routing, and emergency resource requirements.
-- **Presentation layer** — renders the operational picture through dashboards, maps, tables, simulations, and grounded AI.
-
----
-
-## 04 / Project Structure
-
-### Backend
-```text
-backend/app/main.py — FastAPI entrypoint
-backend/app/api/router.py — REST API route handlers
-backend/app/engine/hazard_impact.py — hazard and risk calculations
-backend/app/engine/exposure.py — evacuation demand calculations
-backend/app/engine/shelter_optimizer.py — shelter allocation and capacity constraints
-backend/app/engine/routing.py — evacuation routes and cutoff calculations
-backend/app/engine/resource_planner.py — emergency fleet and resource sizing
-backend/app/services/weather_service.py — Open-Meteo integration
-backend/app/services/search_service.py — geocoding/search
-backend/app/services/dynamic_district_generator.py — OSM-derived sectors
-backend/app/services/census_service.py — demographic integration
-backend/app/services/scenario_service.py — scenario orchestration
-```
-
-### Frontend
-```text
-command_center/ — incident command dashboard
-map/ — map, weather, demographics, search and wind visualization
-resources/ — emergency resource planner
-simulator/ — what-if scenarios
-shelter/ — shelter optimization
-routing/ — evacuation route viewer
-ai_assistant/ — grounded decision assistant
+    DataSources --> BackendCore
+    BackendCore --> FrontendPlatform
 ```
 
 ---
 
-## 05 / Decision Models
+## 🧩 The 7 Core Modules
 
-The mathematical models form the decision-making core of TERRALYNX. Each calculation is expressed below in operational terms so the logic can be understood without needing advanced mathematical notation.
+### 1. 🚨 Incident Command Center (ICS)
+- **Live Threat Banner:** Real-time tracking of cyclone category, central barometric pressure, 24h rainfall totals, sustained winds, and landfall countdown.
+- **CAP Emergency Cell Broadcast:** 1-click modal to transmit synthesized Common Alerting Protocol (CAP) messages to cell towers and siren networks across threatened sectors.
+- **Prioritized Action Directives:** Ranked tactical directives with assigned tactical agency badges (`ODRAF Unit 4`, `NDRF 3rd Bn`, `District Traffic Police`) and **1-Click Bulk Authorization**.
+- **Critical Infrastructure Matrix:** Live monitoring of apex hospitals (*SCB Medical College*, *AIIMS Bhubaneswar*) and flood-threatened road segments.
 
-### 5.1 Zone Risk Score
-The system combines five risk factors into a single score from **0 to 100**.
+### 2. 🗺️ High-Precision Geospatial Risk & Weather Map
+- **Dynamic OSM Municipal Sectors:** Eliminates static boundaries by querying live OpenStreetMap sectors (*CDA Sector 9, Sector 6, Sector 10, Bidanasi, Chauliaganj*).
+- **Google Weather Card & Point Telemetry:** Inspect any clicked point or searched location to view live temperature, humidity, precipitation probability, and **rotating wind direction compass arrows (azimuth + degrees)**.
+- **24-Hour Forecast Timeline:** Interactive timeline tabs for Temperature ($^\circ\text{C} / ^\circ\text{F}$), Precipitation ($\%$, $\text{mm}$), and Wind ($\text{km/h}$).
+- **Global Search with Keyboard Navigation:** Multi-tier fuzzy search with smooth camera `flyTo` for campuses (*C. V. Raman Global University*), hospitals, and sectors.
+- **GPU-Accelerated Wind Stream Particles:** NullSchool-style canvas stream particle physics layer.
+- **Official Census HUD:** Official demographics modal displaying rural/urban ratios, literacy rates, and kutcha housing exposure.
+
+### 3. 🏛️ Shelter Optimization & Temporary Camp Planner
+- **Linear Distance & Safety Optimizer:** Assigns evacuees to verified cyclone shelters while strictly preventing overcrowding:
+  $$\text{Cost}(z, s) = \text{HaversineDistance}(z, s) + 0.10 \cdot (100 - \text{SafetyScore}(s)) - 0.20 \cdot \max(0, \text{Elevation}(s) - 5.0\text{m})$$
+- **Contingency Complex Activation:** Automatically identifies and queues high-capacity temporary facilities (university convention centers, indoor sports stadiums) when designated shelters exceed $80\%$ capacity.
+
+### 4. 🛣️ Evacuation Routing & Cutoff Prediction
+- **Hydraulic Road Vulnerability:** Evaluates road segments against predicted storm surge and heavy runoff.
+- **Cutoff Prediction Timers:** Computes countdowns before low-lying road corridors become impassable.
+- **Dynamic Bypass Routing:** Re-routes evacuation convoys through elevated arterial highways.
+
+### 5. 🚚 Emergency Fleet & Resource Logistics Matrix
+- **Supply Chain Health Dashboard:** 4 live KPI cards for **Fleet Mobility**, **Water Rescue**, **Tactical Search & Rescue**, and **72h Sustenance Rations**.
+- **Interactive Mutual-Aid Requisition Console:** 1-click modal to mobilize reserve fleets ($+5$, $+15$, or custom units) to instantly clear logistical deficits.
+- **Category Filter Tabs:** Quickly filter assets across `All`, `⚠️ Deficits Only`, `Fleets`, `Medical & Triage`, and `Supplies & Power`.
+
+### 6. 🧪 What-If Operational Scenario Simulator
+- **Interactive Sliders:** Live control over Precipitation ($0.5\times$ to $2.2\times$), Cyclone Wind Force (Cat 1 to Cat 5), Coastal Storm Surge ($0.5\text{m}$ to $4.5\text{m}$), and Fleet Availability.
+- **Pre-Engineered Presets:** *Cat-5 Super Cyclone Escalation*, *Delta Cloudburst (+80% rain)*, *Bridge Washouts*, and *Shelter Outages*.
+- **✨ One-Click "Auto-Mitigate All Deficits":** Instantly provisions mutual-aid fleets and activates temporary emergency complexes to eliminate all shortfalls and overflow.
+- **Differential Impact Visualizer:** Side-by-side delta cards comparing baseline vs. simulated values with color-coded trend indicators.
+
+### 7. 🤖 Grounded AI Decision Assistant
+- **Deterministic Natural-Language Briefings:** Ingests live simulation state data to answer complex tactical questions without hallucinations.
+
+---
+
+## 📐 Mathematical Decision Models
+
+### 1. Zone Risk Index $R(z) \in [0, 100]$
+Combines 5 physical and vulnerability metrics into a unified risk rating:
+$$R(z) = 0.28 \cdot \min\left(100, \frac{P_{24h}}{3.0}\right) + 0.22 \cdot \min\left(100, \frac{W_{\text{gusts}}}{2.0}\right) + 0.20 \cdot \min\left(100, S_{\text{surge}} \cdot 25\right) + 0.18 \cdot \max\left(0, 100 - E_{\text{elev}} \cdot 10\right) + 0.12 \cdot K_{\text{kutcha}}$$
+
+### 2. Assisted Evacuation Demand $E(z)$
+Calculates the exact assisted transit requirement for each sector:
+$$E(z) = \text{Population}(z) \times \text{ExposureMultiplier}(R(z)) \times \left(0.40 \cdot \frac{K_{\text{kutcha}}}{100} + 0.35 \cdot \text{ElderlyRatio} + 0.25 \cdot \text{FloodThreatIndex}\right)$$
+
+---
+
+## 🚚 Emergency Fleet & Logistics Sizing
+
+| Asset Class | Sizing Equation | Operational Rationale |
+|---|---|---|
+| **40-pax Evacuation Buses** | $\lceil (E_{\text{total}} \times 0.80) / (40 \times 1.5) \rceil$ | Assumes $80\%$ transit dependence & $1.5$ convoy turnaround cycles |
+| **Inflatable Rescue Boats & OBMs** | $4 \times N_{\text{delta\_zones}} + 2 \times N_{\text{critical\_zones}}$ | Allocated to low-elevation waterlogged zones ($\le 3.5\text{m}$) |
+| **ALS Ambulances** | $\lceil \text{MedicalDependencies} / 18 \rceil + N_{\text{hospitals}}$ | Dedicated to ICU hospital transfers & registered fragile patients |
+| **Tactical NDRF / ODRAF Teams** | $\lceil E_{\text{critical}} / 650 \rceil + N_{\text{critical\_zones}}$ | 10-person units deployed to high-risk structural breach zones |
+| **72-Hour Sustenance Rations** | $E_{\text{total}} \times 3 \text{ days}$ | 72-hour survival food & potable water packs for active shelters |
+| **Heavy Mobile Diesel Generators** | $N_{\text{active\_shelters}} \times 2$ | 25kVA generators to ensure continuous water pumping & lighting |
+
+---
+
+## 📂 Project Directory Structure
 
 ```text
-RISK SCORE =
-  28% × Rainfall Risk
-+ 22% × Wind Risk
-+ 20% × Storm-Surge Risk
-+ 18% × Low-Elevation Risk
-+ 12% × Vulnerable-Housing Risk
+TERRALYNX/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── router.py                 # REST API endpoints & route handlers
+│   │   ├── engine/                       # Deterministic Decision Core
+│   │   │   ├── alert_generator.py        # Operational alert synthesis
+│   │   │   ├── exposure.py               # Evacuation demand calculation
+│   │   │   ├── hazard_impact.py          # Multi-factor zone risk scoring
+│   │   │   ├── resource_planner.py       # Emergency fleet & logistics sizing
+│   │   │   ├── routing.py                # Topographic road flood assessment
+│   │   │   └── shelter_optimizer.py      # Capacity-constrained shelter allocation
+│   │   ├── models/                       # Pydantic v2 schemas
+│   │   │   ├── geography.py              # Zone, Coordinates, Topography
+│   │   │   ├── hazard.py                 # HazardTelemetry models
+│   │   │   ├── infrastructure.py         # Shelter, Hospital, RoadSegment
+│   │   │   ├── response.py               # Allocation, Route, Resource, Alert
+│   │   │   └── scenario.py               # DistrictState, Overrides, Diff
+│   │   ├── services/                     # Geospatial & Weather Integration
+│   │   │   ├── ai_assistant.py           # Grounded AI decision service
+│   │   │   ├── census_service.py         # Official Census demographics
+│   │   │   ├── dynamic_district_generator.py # OSM Overpass boundary generator
+│   │   │   ├── scenario_service.py       # Scenario orchestration & diff
+│   │   │   ├── search_service.py         # Multi-tier fuzzy location search
+│   │   │   └── weather_service.py        # Open-Meteo live API integration
+│   │   ├── config.py                     # App settings & environment
+│   │   └── main.py                       # FastAPI application entrypoint
+│   └── tests/                            # Pytest Test Suite (15/15 passing)
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ai_assistant/             # DecisionAssistant.tsx
+│   │   │   ├── command_center/           # CommandCenterView, ThreatBanner, PriorityActionsList
+│   │   │   ├── layout/                   # Header, Navigation
+│   │   │   ├── map/                      # RiskMap, GoogleWeatherCard, LocationSearchBar, DemographicsCard
+│   │   │   ├── resources/                # ResourcePlannerTable.tsx
+│   │   │   ├── routing/                  # EvacuationRouteViewer.tsx
+│   │   │   ├── shelter/                  # SheltersView, ShelterMatrix, TemporaryShelterPlanner
+│   │   │   └── simulator/                # WhatIfSimulator.tsx
+│   │   ├── services/                     # api.ts (Backend REST connector)
+│   │   ├── types/                        # index.ts (Full TypeScript contracts)
+│   │   ├── App.tsx                       # Master Application Root
+│   │   └── main.tsx                      # Vite React entrypoint
+│   └── package.json
+│
+├── TERRALYNX_Documentation.pdf           # Official 7-page technical PDF documentation
+├── TERRALYNX_Documentation.html          # HTML printable technical documentation
+└── README.md
 ```
 
-- **Rainfall Risk** — 24-hour rainfall compared against a 3.0 reference threshold, capped at 100.
-- **Wind Risk** — maximum wind gust compared against a 2.0 reference threshold, capped at 100.
-- **Storm-Surge Risk** — surge height × 25.
-- **Low-Elevation Risk** — $100 - (	ext{elevation} 	imes 10)$, never below 0.
-- **Vulnerable-Housing Risk** — percentage of kutcha housing.
+---
 
-**Precise model:**
-$$R(z) = 0.28 \cdot \min(100, P_{24h} / 3.0) + 0.22 \cdot \min(100, W_{	ext{gusts}} / 2.0) + 0.20 \cdot \min(100, S_{	ext{surge}} \cdot 25) + 0.18 \cdot \max(0, 100 - E_{	ext{elev}} \cdot 10) + 0.12 \cdot K_{	ext{kutcha}}$$
+## 🚀 Getting Started
 
-### 5.2 Assisted Evacuation Demand
-The model estimates how many people may need assisted evacuation by combining population, overall risk, and vulnerability.
+### Prerequisites
+- **Python:** 3.11 or 3.13
+- **Node.js:** v18+ and `npm`
 
+### 1. Start the FastAPI Backend
+```powershell
+# In the root TERRALYNX repository directory:
+$env:PYTHONPATH="."
+python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+* Interactive Swagger API Docs: **`http://localhost:8000/docs`**
+
+### 2. Start the Vite Frontend Server
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+* Local Web Dashboard: **`http://localhost:5173`** *(or `http://localhost:5174`)*
+
+### 3. Run the Automated Test Suite
+```powershell
+$env:PYTHONPATH="."
+pytest backend/tests -v
+```
 ```text
-ASSISTED EVACUATION DEMAND =
-  Population × Risk Exposure Multiplier × Vulnerability Factor
-
-VULNERABILITY FACTOR =
-  40% × Vulnerable-Housing Ratio
-+ 35% × Elderly Population Ratio
-+ 25% × Flood Threat Index
-```
-This gives higher assistance requirements to areas where evacuation is more difficult because of housing vulnerability, elderly populations, or flood exposure.
-
-### 5.3 Shelter Selection
-Shelters are ranked by combining travel distance, safety, and elevation.
-
-```text
-SHELTER COST =
-  Travel Distance + Safety Penalty − Elevation Benefit
-```
-A lower cost means a more suitable shelter. Higher safety and elevation improve suitability, while greater travel distance reduces it.
-
-**Precise model:**
-$$	ext{Cost}(z, s) = 	ext{HaversineDistance}(z, s) + 0.10 \cdot (100 - 	ext{SafetyScore}(s)) - 0.20 \cdot \max(0, 	ext{Elevation}(s) - 5.0	ext{m})$$
-
-**Capacity rule:** a shelter can never receive more evacuees than its available capacity. When utilization exceeds 80%, the system can queue high-capacity Temporary Emergency Complexes.
-
----
-
-## 06 / Emergency Resource Planning
-
-TERRALYNX translates evacuation demand into practical resource requirements for transport, rescue, medical response, tactical teams, and sustenance.
-
-### 6.1 Evacuation Buses
-The initial model assumes that 80% of assisted evacuees may require bus transportation.
-
-```text
-REQUIRED BUSES = People Requiring Bus Evacuation ÷ Effective Bus Capacity
-People requiring buses = Total evacuation demand × 80%
-Effective capacity = 40 passengers × 1.5 convoy-turnaround factor
-Always round upward to a whole bus.
-
-Required buses = ceil((Total evacuation demand × 0.80) / (40 × 1.5))
-```
-
-### 6.2 Rescue Boats & OBMs
-For low-elevation delta areas:
-```text
-RESCUE BOATS / OBMs = 4 × Delta-Risk Zones + 2 × Critical Zones
-```
-The calculation applies to sectors with elevation of 3.5 m or less.
-
-### 6.3 Medical & Tactical Resources
-- **Advance Life Support ambulances** are sized against ICU-transfer requirements and registered medical dependencies.
-- **NDRF/ODRAF resources** are represented as 10-person tactical units scaled to critical structural-breach zones.
-
-### 6.4 72-Hour Sustenance
-```text
-72-HOUR RATION REQUIREMENT = Total Evacuation Demand × 3 Daily Packs
+======================= 15 passed in 21.24s =======================
 ```
 
 ---
 
-## 07 / Core Platform Modules
+## 🌐 REST API Specifications
 
-- **01 / Incident Command Center**: Threat banner, CAP emergency-cell broadcast, priority directives, tactical authorization, and infrastructure monitoring.
-- **02 / Geospatial Risk & Weather Map**: Dynamic OSM sectors, live weather inspection, forecast timelines, wind direction, demographics, risk layers, and wind particles.
-- **03 / Shelter Optimization**: Capacity utilization, current/incoming allocations, safety ratings, and temporary emergency-complex activation.
-- **04 / Evacuation Routing & Cutoff**: Road elevation, hydraulic/surge cutoff assessment, and elevated arterial bypass routing.
-- **05 / Fleet Logistics & Resources**: Mobility, rescue, medical, and ration requirements, deficit tracking, and mutual-aid requisition.
-- **06 / What-If Simulator**: Precipitation, wind, surge, and fleet controls, severe-event presets, differential analysis, and automatic mitigation.
-- **07 / Grounded AI Assistant**: Natural-language operational intelligence grounded in the current deterministic simulation state.
-
----
-
-## 08 / API Surface
-
-| Endpoint | Description |
-|---|---|
-| `/api/scenario/current` | Get current operational scenario |
-| `/api/scenario/simulate` | Run a what-if scenario |
-| `/api/location/search` | Search locations and landmarks |
-| `/api/telemetry/point` | Get point-specific weather telemetry |
-| `/api/ai/query` | Query the grounded decision assistant |
-| `/api/census/official` | Retrieve official demographic information |
+| Endpoint | Method | Input Parameters | Description |
+|---|---|---|---|
+| `/api/scenario/current` | `GET` | None | Returns the full current operational district state |
+| `/api/scenario/simulate` | `POST` | `SimulationOverrides` (JSON) | Recalculates response plan with before/after differential analysis |
+| `/api/scenario/reset` | `POST` | None | Resets all simulation overrides to nominal baseline |
+| `/api/location/search` | `GET` | `query` (string) | Fuzzy search for universities, hospitals, sectors, and cities |
+| `/api/telemetry/point` | `GET` | `lat`, `lng`, `location_name` | Fetches live Open-Meteo weather with wind azimuth & 24h timeline |
+| `/api/ai/query` | `POST` | `AIQueryRequest` (JSON) | Generates grounded natural-language disaster intelligence briefings |
+| `/api/census/official` | `GET` | `district_name` (optional) | Retrieves official Government Census demographics profile |
 
 ---
 
-## 09 / Data Flow
+## 🛡️ Data Integrity & Engineering Principles
 
-1. A user selects or searches for a location.
-2. OSM and geocoding services resolve the geographic context.
-3. Open-Meteo supplies weather and forecast telemetry.
-4. Demographic and exposure inputs are associated with the zone.
-5. Deterministic engines calculate risk and operational requirements.
-6. FastAPI exposes the scenario state.
-7. React and MapLibre render the operational picture.
-8. The AI assistant explains the resulting state.
+1. **Deterministic Execution:** Decision calculations are 100% deterministic, mathematically explainable, and independently testable.
+2. **Zero Fabricated Boundaries:** All geographic sectors (*CDA Sector 9, Bidanasi, etc.*) are queried directly from real OpenStreetMap Overpass geometries.
+3. **Hard Capacity Constraints:** Shelter allocations strictly respect maximum shelter capacity thresholds without silent overflows.
+4. **Live Telemetry Separation:** Telemetry feeds (Open-Meteo) are treated as data providers, distinct from calculated decision states.
+5. **Strict Typing:** TypeScript models on the frontend strictly mirror Python Pydantic schemas on the backend.
 
 ---
 
-## 10 / Data Integrity & Reliability
-
-- External APIs are data providers, not decision engines. Incoming values should be validated, normalized to consistent units, and handled explicitly when unavailable.
-- A failed weather or geospatial service must not silently produce an unsafe or fabricated decision output. Dynamic OSM geometry should be preferred over arbitrary dummy boundaries in production paths.
-- Demographic information should retain its source context and should not be represented as live telemetry when it is not.
-
----
-
-## 11 / Grounded AI
-
-The AI assistant is an interpretation layer over the deterministic simulation. It does not replace the mathematical decision engines.
-
-```text
-USER QUESTION ➔ CURRENT SCENARIO STATE ➔ RELEVANT METRICS ➔ GROUNDED RESPONSE
-```
-
-The assistant should distinguish calculated values from observations and assumptions, and should not invent weather values, shelter capacity, evacuation orders, or government instructions.
-
----
-
-## 12 / Engineering Principles
-
-- Keep decision calculations deterministic and independently testable.
-- Enforce shelter capacity as a hard constraint.
-- Separate live telemetry from calculated decision state.
-- Prefer dynamic OSM and Open-Meteo data over dummy production data.
-- Maintain strict TypeScript types across frontend/backend contracts.
-- Use the `#0a0d14` dark command-center visual foundation.
-- Prevent external-service failures from corrupting decisions.
-- Make scenario outputs reproducible from their inputs.
-
----
-
-## 13 / System Concept
-
-TERRALYNX connects changing environmental conditions with explainable operational decisions through a single geospatial command interface.
-
-```text
-LIVE DATA ➔ THREAT ➔ RISK ➔ EVACUATION ➔ SHELTERS ➔ ROUTES ➔ RESOURCES ➔ COMMAND DECISION
-```
-
-The initial implementation establishes the foundation for a production-grade geospatial incident-command platform while preserving the deterministic integrity of its decision engines.
-
----
-**TERRALYNX — Initial Version**
+<div align="center">
+  <sub>Built for Resilience • <b>TERRALYNX Disaster Operations Platform</b></sub>
+</div>
