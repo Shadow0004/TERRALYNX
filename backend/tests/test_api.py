@@ -50,3 +50,14 @@ def test_radar_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "available" in data
+
+def test_wind_grid_endpoint():
+    response = client.get("/api/weather/wind-grid?lat=20.2961&lng=85.8245")
+    assert response.status_code == 200
+    data = response.json()
+    assert "grid_points" in data
+    assert len(data["grid_points"]) > 0
+    first_pt = data["grid_points"][0]
+    assert "wind_speed_kmh" in first_pt
+    assert "u_ms" in first_pt
+    assert "v_ms" in first_pt

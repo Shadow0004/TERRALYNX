@@ -84,4 +84,28 @@ export const apiService = {
     }
     return res.json();
   },
+
+  async fetchRegionalWindGrid(lat: number, lng: number, radiusDeg: number = 0.35): Promise<{
+    center: { lat: number; lng: number };
+    radius_deg: number;
+    grid_points: Array<{
+      lat: number;
+      lng: number;
+      wind_speed_kmh: number;
+      wind_direction_deg: number;
+      wind_gusts_kmh: number;
+      cardinal: string;
+      u_ms: number;
+      v_ms: number;
+      surface_pressure_hpa: number;
+    }>;
+    total_stations: number;
+    updated_at: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/weather/wind-grid?lat=${lat}&lng=${lng}&radius_deg=${radiusDeg}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch wind grid: ${res.statusText}`);
+    }
+    return res.json();
+  },
 };

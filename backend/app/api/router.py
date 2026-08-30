@@ -181,3 +181,14 @@ async def inspect_live_point(
     """
     return await weather_service.fetch_point_telemetry(lat=lat, lng=lng)
 
+@router.get("/weather/wind-grid")
+async def get_regional_wind_grid(
+    lat: float = Query(..., description="Latitude of center"),
+    lng: float = Query(..., description="Longitude of center"),
+    radius_deg: float = Query(0.30, description="Spatial radius in degrees")
+):
+    """
+    Fetches real-time spatial atmospheric wind vector grid from Open-Meteo across the region.
+    """
+    return await weather_service.fetch_regional_wind_grid(center_lat=lat, center_lng=lng, radius_deg=radius_deg)
+
