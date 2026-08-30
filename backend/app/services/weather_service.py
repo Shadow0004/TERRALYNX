@@ -39,23 +39,34 @@ async def reverse_geocode_location(lat: float, lng: float, client: httpx.AsyncCl
     
     # 1. Primary: Nominatim OpenStreetMap with full administrative hierarchy
     try:
-        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lng}&format=json&addressdetails=1&zoom=12"
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lng}&format=json&addressdetails=1&zoom=15"
         res = await client.get(url, headers=headers, timeout=3.5)
         if res.status_code == 200:
             data = res.json()
             addr = data.get("address", {})
+            suburb = (
+                addr.get("suburb") or
+                addr.get("neighbourhood") or
+                addr.get("residential") or
+                addr.get("village") or
+                addr.get("quarter") or
+                addr.get("town") or
+                addr.get("city_district")
+            )
             district = (
                 addr.get("state_district") or
                 addr.get("county") or
                 addr.get("city") or
-                addr.get("town") or
                 addr.get("municipality") or
                 addr.get("district")
             )
             state = addr.get("state") or addr.get("region")
             country = addr.get("country") or ""
             
-            if district and state:
+            if suburb and district and state:
+                dist_str = district if "district" in district.lower() else f"{district} District"
+                return f"{suburb}, {dist_str}, {state}"
+            elif district and state:
                 dist_label = district if ("district" in district.lower() or "city" in district.lower()) else f"{district} District"
                 return f"{dist_label}, {state}"
             elif district:
