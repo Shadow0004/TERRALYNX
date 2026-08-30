@@ -195,6 +195,50 @@ export const RiskMap: React.FC<RiskMapProps> = ({
         },
       });
 
+      // Zone Names & Area Badges Symbol Layer directly on Polygons
+      const zoneLabelsGeoJSON: GeoJSON.FeatureCollection = {
+        type: 'FeatureCollection',
+        features: zones.map((z) => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [z.center.lng, z.center.lat],
+          },
+          properties: {
+            id: z.id,
+            name: z.name,
+            code: z.code,
+            risk_score: `${z.risk_score.toFixed(0)}%`,
+            risk_level: z.risk_level,
+          },
+        })),
+      };
+
+      map.addSource('zones-labels-source', {
+        type: 'geojson',
+        data: zoneLabelsGeoJSON,
+      });
+
+      map.addLayer({
+        id: 'zones-labels',
+        type: 'symbol',
+        source: 'zones-labels-source',
+        layout: {
+          'text-field': ['concat', ['get', 'name'], '\n[', ['get', 'code'], ' • ', ['get', 'risk_score'], ' RISK]'],
+          'text-size': 11.5,
+          'text-anchor': 'center',
+          'text-max-width': 11,
+          'text-line-height': 1.25,
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#060a14',
+          'text-halo-width': 3.2,
+          'text-halo-blur': 1.0,
+        },
+      });
+
       // Global Map Click Listener for Point Inspector Tool
       map.on('click', (e) => {
         setPinpointCoords([e.lngLat.lng, e.lngLat.lat]);
@@ -390,6 +434,28 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       });
     }
 
+    // Update zone labels
+    const zoneLabelsSource = map.getSource('zones-labels-source') as maplibregl.GeoJSONSource;
+    if (zoneLabelsSource) {
+      zoneLabelsSource.setData({
+        type: 'FeatureCollection',
+        features: zones.map((z) => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [z.center.lng, z.center.lat],
+          },
+          properties: {
+            id: z.id,
+            name: z.name,
+            code: z.code,
+            risk_score: `${z.risk_score.toFixed(0)}%`,
+            risk_level: z.risk_level,
+          },
+        })),
+      });
+    }
+
     // Update roads
     const roadSource = map.getSource('roads-source') as maplibregl.GeoJSONSource;
     if (roadSource) {
@@ -525,6 +591,9 @@ export const RiskMap: React.FC<RiskMapProps> = ({
     if (map.getLayer('zones-fill')) {
       map.setLayoutProperty('zones-fill', 'visibility', showZones ? 'visible' : 'none');
       map.setLayoutProperty('zones-outline', 'visibility', showZones ? 'visible' : 'none');
+    }
+    if (map.getLayer('zones-labels')) {
+      map.setLayoutProperty('zones-labels', 'visibility', showZones ? 'visible' : 'none');
     }
     if (map.getLayer('roads-line')) {
       map.setLayoutProperty('roads-line', 'visibility', showRoads ? 'visible' : 'none');

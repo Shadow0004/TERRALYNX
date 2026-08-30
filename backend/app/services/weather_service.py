@@ -32,45 +32,81 @@ def get_weather_description(code: int) -> str:
 
 async def reverse_geocode_location(lat: float, lng: float, client: httpx.AsyncClient) -> str:
     """
-    Resolves human-readable place / city / district name using BigDataCloud & Nominatim free APIs.
+    Resolves authentic human-readable District and State (e.g. 'Khordha District, Odisha')
+    using OpenStreetMap Nominatim and BigDataCloud APIs with precise geographic fallback.
     """
+    headers = {"User-Agent": "TerraLynx-DisasterOps/2.0 (admin@terralynx.gov)"}
+    
+    # 1. Primary: Nominatim OpenStreetMap with full administrative hierarchy
     try:
-        url = f"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={lat}&longitude={lng}&localityLanguage=en"
-        res = await client.get(url, timeout=4.0)
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lng}&format=json&addressdetails=1&zoom=12"
+        res = await client.get(url, headers=headers, timeout=3.5)
         if res.status_code == 200:
             data = res.json()
-            locality = data.get("locality") or data.get("city") or data.get("principalSubdivision") or ""
-            subdivision = data.get("principalSubdivision") or ""
-            country = data.get("countryName") or ""
+            addr = data.get("address", {})
+            district = (
+                addr.get("state_district") or
+                addr.get("county") or
+                addr.get("city") or
+                addr.get("town") or
+                addr.get("municipality") or
+                addr.get("district")
+            )
+            state = addr.get("state") or addr.get("region")
+            country = addr.get("country") or ""
             
-            parts = [p for p in [locality, subdivision, country] if p]
-            clean_parts = []
-            for p in parts:
-                if not clean_parts or clean_parts[-1].lower() != p.lower():
-                    clean_parts.append(p)
-            
-            if clean_parts:
-                return ", ".join(clean_parts[:2])
+            if district and state:
+                dist_label = district if ("district" in district.lower() or "city" in district.lower()) else f"{district} District"
+                return f"{dist_label}, {state}"
+            elif district:
+                return district
+            elif state:
+                return f"{state}, {country}" if country else state
     except Exception:
         pass
 
-    # Fallback to geographical bounding checks
-    if 19.5 <= lat <= 20.2 and 85.5 <= lng <= 86.5:
-        return "Puri Coast, Odisha"
-    elif 12.8 <= lat <= 13.3 and 80.0 <= lng <= 80.5:
-        return "Chennai Coast, Tamil Nadu"
-    elif 18.7 <= lat <= 19.4 and 72.6 <= lng <= 73.2:
-        return "Mumbai Coast, Maharashtra"
-    elif 17.5 <= lat <= 18.0 and 83.0 <= lng <= 83.5:
-        return "Visakhapatnam, Andhra Pradesh"
-    elif 22.2 <= lat <= 22.8 and 88.1 <= lng <= 88.6:
-        return "Kolkata Delta, West Bengal"
-    elif 10.0 <= lat <= 23.0 and 80.0 <= lng <= 93.0:
-        return "Bay of Bengal Offshore Sector"
-    elif 8.0 <= lat <= 24.0 and 65.0 <= lng <= 75.0:
-        return "Arabian Sea Offshore Sector"
+    # 2. Secondary: BigDataCloud Reverse Geocode
+    try:
+        url = f"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={lat}&longitude={lng}&localityLanguage=en"
+        res = await client.get(url, timeout=3.0)
+        if res.status_code == 200:
+            data = res.json()
+            locality = data.get("locality") or data.get("city") or ""
+            subdivision = data.get("principalSubdivision") or ""
+            if locality and subdivision:
+                return f"{locality}, {subdivision}"
+            elif subdivision:
+                return subdivision
+    except Exception:
+        pass
+
+    # 3. Calibrated Geographic Bounding Checks for Coastal & Inland India
+    if 20.10 <= lat <= 20.40 and 85.65 <= lng <= 85.95:
+        return "Khordha District (Bhubaneswar), Odisha"
+    elif 20.40 <= lat <= 20.65 and 85.75 <= lng <= 86.10:
+        return "Cuttack District, Odisha"
+    elif 19.50 <= lat <= 20.10 and 85.50 <= lng <= 86.20:
+        return "Puri District, Odisha"
+    elif 19.10 <= lat <= 19.60 and 84.60 <= lng <= 85.20:
+        return "Ganjam District (Berhampur), Odisha"
+    elif 20.00 <= lat <= 20.50 and 86.10 <= lng <= 86.70:
+        return "Jagatsinghpur District (Paradeep), Odisha"
+    elif 20.40 <= lat <= 20.90 and 86.30 <= lng <= 86.90:
+        return "Kendrapara District, Odisha"
+    elif 21.20 <= lat <= 21.80 and 86.70 <= lng <= 87.30:
+        return "Balasore District, Odisha"
+    elif 12.80 <= lat <= 13.30 and 80.00 <= lng <= 80.40:
+        return "Chennai District, Tamil Nadu"
+    elif 18.80 <= lat <= 19.40 and 72.70 <= lng <= 73.20:
+        return "Mumbai Suburban District, Maharashtra"
+    elif 17.55 <= lat <= 17.95 and 83.10 <= lng <= 83.45:
+        return "Visakhapatnam District, Andhra Pradesh"
+    elif 22.30 <= lat <= 22.80 and 88.20 <= lng <= 88.60:
+        return "Kolkata District, West Bengal"
+    elif 19.00 <= lat <= 22.50 and 84.00 <= lng <= 87.50:
+        return "Odisha Coastal Sector, Odisha"
     
-    return f"Sector ({round(lat, 3)}°N, {round(lng, 3)}°E)"
+    return f"Administrative Sector ({round(lat, 3)}°N, {round(lng, 3)}°E)"
 
 class OpenMeteoService:
     async def fetch_live_telemetry(

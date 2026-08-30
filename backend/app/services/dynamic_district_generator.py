@@ -45,6 +45,18 @@ CITY_NEIGHBORHOODS: Dict[str, List[Dict[str, Any]]] = {
         {"name": "Mancheswar Industrial Estate", "code": "MCH-09", "dlat": 0.025, "dlng": 0.045, "pop": 22000},
         {"name": "Ghatikia & Chandaka Forest Buffer", "code": "GHT-10", "dlat": 0.035, "dlng": -0.052, "pop": 18000},
     ],
+    "khordha": [
+        {"name": "Patia Tech & University Zone", "code": "PAT-01", "dlat": 0.048, "dlng": 0.012, "pop": 42000},
+        {"name": "Chandrasekharpur Commercial Sector", "code": "CSP-02", "dlat": 0.028, "dlng": 0.005, "pop": 38000},
+        {"name": "Nayapalli & CRPF Administrative Belt", "code": "NYP-03", "dlat": 0.010, "dlng": -0.015, "pop": 34000},
+        {"name": "Saheed Nagar & Vani Vihar Core", "code": "SHN-04", "dlat": 0.002, "dlng": 0.022, "pop": 31000},
+        {"name": "Rasulgarh National Highway Junction", "code": "RSG-05", "dlat": -0.015, "dlng": 0.038, "pop": 36000},
+        {"name": "Old Town & Lingaraj Heritage Valley", "code": "OLT-06", "dlat": -0.042, "dlng": 0.012, "pop": 29000},
+        {"name": "Khandagiri & Udayagiri High Ridge", "code": "KDG-07", "dlat": -0.012, "dlng": -0.045, "pop": 24000},
+        {"name": "Daya River Lowland Floodplain (Balianta)", "code": "BAL-08", "dlat": -0.048, "dlng": 0.048, "pop": 28000},
+        {"name": "Mancheswar Industrial Estate", "code": "MCH-09", "dlat": 0.025, "dlng": 0.045, "pop": 22000},
+        {"name": "Ghatikia & Chandaka Forest Buffer", "code": "GHT-10", "dlat": 0.035, "dlng": -0.052, "pop": 18000},
+    ],
     "puri": [
         {"name": "Swargadwar Sea Beach & Promenade", "code": "SWG-01", "dlat": -0.025, "dlng": 0.005, "pop": 26000},
         {"name": "Grand Road & Jagannath Temple Core", "code": "GRD-02", "dlat": 0.005, "dlng": 0.002, "pop": 39000},
@@ -198,17 +210,18 @@ async def resolve_real_neighborhood_names(
     """
     Resolves authentic local neighborhood names for each zone center coordinate.
     """
-    lower_city = city_name.lower()
+    clean_name = city_name.replace("Live Weather (", "").replace(")", "").strip()
+    lower_city = clean_name.lower()
     for k, v in CITY_NEIGHBORHOODS.items():
         if k in lower_city:
             return [item["name"] for item in v[:len(coords)]]
 
     resolved_names = []
-    headers = {"User-Agent": "TerraLynx-DisasterOps/2.0"}
+    headers = {"User-Agent": "TerraLynx-DisasterOps/2.0 (admin@terralynx.gov)"}
 
     for idx, (lat, lng) in enumerate(coords):
         name = None
-        if idx < 4:
+        if idx < 6:
             try:
                 res = await client.get(
                     NOMINATIM_REVERSE_URL,
@@ -218,15 +231,28 @@ async def resolve_real_neighborhood_names(
                 )
                 if res.status_code == 200:
                     addr = res.json().get("address", {})
-                    suburb = addr.get("suburb") or addr.get("neighbourhood") or addr.get("residential") or addr.get("village") or addr.get("quarter")
+                    suburb = (
+                        addr.get("suburb") or
+                        addr.get("neighbourhood") or
+                        addr.get("residential") or
+                        addr.get("village") or
+                        addr.get("quarter") or
+                        addr.get("town") or
+                        addr.get("city_district")
+                    )
                     if suburb:
                         name = f"{suburb} Sector"
             except Exception:
                 pass
         
         if not name:
-            dir_labels = ["Urban Core", "South Riverfront", "East Promenade", "River Basin", "North Industrial", "North-West Ridge", "West Bypass", "Highland Cantonment", "South Delta", "North-East Gateway"]
-            name = f"{city_name} {dir_labels[idx % len(dir_labels)]}"
+            dir_labels = [
+                "Urban Central Core", "South Riverfront", "East Promenade",
+                "River Basin", "North Industrial", "North-West Ridge",
+                "West Bypass", "Highland Cantonment", "South Valley", "North-East Gateway"
+            ]
+            primary_name = clean_name.split(",")[0].strip()
+            name = f"{primary_name} {dir_labels[idx % len(dir_labels)]}"
         
         resolved_names.append(name)
 
@@ -513,7 +539,7 @@ async def generate_dynamic_district_data_async(
 
             road = RoadSegment(
                 id=f"ROAD-{idx+1:02d}",
-                name=f"{district_name} {suffix}",
+                name=f"{z_u.name.split(' ')[0]} ➔ {z_v.name.split(' ')[0]} ({suffix})",
                 from_zone_id=z_u.id,
                 to_zone_id=z_v.id,
                 distance_km=max(2.5, dist_km),
