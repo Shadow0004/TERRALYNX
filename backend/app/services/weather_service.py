@@ -244,7 +244,7 @@ class OpenMeteoService:
 
     async def fetch_point_telemetry(self, lat: float, lng: float) -> Dict[str, Any]:
         """
-        Fetches pinpoint real-time weather & reverse-geocoded place name for any clicked GPS coordinate.
+        Fetches pinpoint real-time weather, 24h hourly forecast curves & reverse-geocoded place name.
         """
         params = {
             "latitude": lat,
@@ -261,7 +261,13 @@ class OpenMeteoService:
                 "wind_gusts_10m"
             ],
             "hourly": [
+                "temperature_2m",
+                "precipitation_probability",
                 "precipitation",
+                "relative_humidity_2m",
+                "wind_speed_10m",
+                "wind_direction_10m",
+                "weather_code",
                 "soil_moisture_0_to_1cm"
             ],
             "daily": ["precipitation_sum"],
@@ -284,10 +290,11 @@ class OpenMeteoService:
                 "location_name": resolved_name,
                 "temperature_c": 28.5,
                 "humidity_percent": 82.0,
+                "precipitation_probability": 65,
                 "rainfall_rate_mm_hr": 12.0,
                 "rain_24h_sum_mm": 64.0,
-                "wind_speed_kmh": 45.0,
-                "wind_gusts_kmh": 62.0,
+                "wind_speed_kmh": 11.0,
+                "wind_gusts_kmh": 22.0,
                 "wind_direction_deg": 140.0,
                 "wind_direction_cardinal": "SE",
                 "surface_pressure_hpa": 1002.0,
@@ -296,6 +303,7 @@ class OpenMeteoService:
                 "soil_saturation_percent": 72.0,
                 "point_risk_score": 58.0,
                 "risk_tier": "HIGH",
+                "hourly_forecast": [],
                 "updated_at": datetime.utcnow().isoformat() + "Z"
             }
 
@@ -329,12 +337,54 @@ class OpenMeteoService:
         point_risk = round((0.35 * rain_factor + 0.25 * elev_factor + 0.25 * soil_factor + 0.15 * wind_factor) * 100.0, 1)
         risk_tier = "CRITICAL" if point_risk >= 75 else "HIGH" if point_risk >= 50 else "WATCH" if point_risk >= 25 else "SAFE"
 
+        # Build 24-hour hourly forecast timeline
+        hourly_times = hourly.get("time", [])
+        hourly_temps = hourly.get("temperature_2m", [])
+        hourly_precip_probs = hourly.get("precipitation_probability", [])
+        hourly_precips = hourly.get("precipitation", [])
+        hourly_humidities = hourly.get("relative_humidity_2m", [])
+        hourly_winds = hourly.get("wind_speed_10m", [])
+        hourly_wind_dirs = hourly.get("wind_direction_10m", [])
+        hourly_codes = hourly.get("weather_code", [])
+
+        now_iso = current.get("time", datetime.utcnow().strftime("%Y-%m-%dT%H:00"))
+        start_idx = 0
+        for idx, t_str in enumerate(hourly_times):
+            if t_str >= now_iso:
+                start_idx = idx
+                break
+
+        current_prob = int(hourly_precip_probs[start_idx]) if start_idx < len(hourly_precip_probs) else 65
+
+        hourly_items = []
+        for i in range(start_idx, min(start_idx + 24, len(hourly_times))):
+            t_str = hourly_times[i]
+            dt = datetime.fromisoformat(t_str)
+            label = "Now" if i == start_idx else dt.strftime("%I %p").lstrip("0")
+            w_code = int(hourly_codes[i]) if i < len(hourly_codes) else 3
+            wdir = float(hourly_wind_dirs[i]) if i < len(hourly_wind_dirs) else 0.0
+            
+            hourly_items.append({
+                "time": label,
+                "iso_time": t_str,
+                "temperature_c": round(float(hourly_temps[i]), 1) if i < len(hourly_temps) else 27.0,
+                "precipitation_probability": int(hourly_precip_probs[i]) if i < len(hourly_precip_probs) else 50,
+                "precipitation_mm": round(float(hourly_precips[i]), 1) if i < len(hourly_precips) else 0.0,
+                "humidity_percent": int(hourly_humidities[i]) if i < len(hourly_humidities) else 80,
+                "wind_speed_kmh": round(float(hourly_winds[i]), 1) if i < len(hourly_winds) else 10.0,
+                "wind_direction_deg": round(wdir, 1),
+                "wind_direction_cardinal": degrees_to_cardinal(wdir),
+                "weather_code": w_code,
+                "weather_description": get_weather_description(w_code)
+            })
+
         return {
             "latitude": lat,
             "longitude": lng,
             "location_name": resolved_name,
             "temperature_c": round(temp, 1),
             "humidity_percent": round(humidity, 1),
+            "precipitation_probability": current_prob,
             "rainfall_rate_mm_hr": round(rain_rate, 1),
             "rain_24h_sum_mm": round(total_24h_rain, 1),
             "wind_speed_kmh": round(wind_speed, 1),
@@ -347,6 +397,7 @@ class OpenMeteoService:
             "soil_saturation_percent": round(soil_sat, 1),
             "point_risk_score": point_risk,
             "risk_tier": risk_tier,
+            "hourly_forecast": hourly_items,
             "updated_at": datetime.utcnow().isoformat() + "Z"
         }
 

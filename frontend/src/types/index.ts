@@ -333,3 +333,40 @@ export interface AIQueryResponse {
   model_used?: string;
   confidence_score: number;
 }
+
+export interface HourlyForecastItem {
+  time: string;
+  iso_time: string;
+  temperature_c: number;
+  precipitation_probability: number;
+  precipitation_mm: number;
+  humidity_percent: number;
+  wind_speed_kmh: number;
+  wind_direction_deg: number;
+  wind_direction_cardinal: string;
+  weather_code: number;
+  weather_description: string;
+}
+
+export interface PointTelemetryResponse {
+  latitude: number;
+  longitude: number;
+  location_name?: string;
+  temperature_c: number;
+  humidity_percent: number;
+  precipitation_probability: number;
+  rainfall_rate_mm_hr: number;
+  rain_24h_sum_mm: number;
+  wind_speed_kmh: number;
+  wind_gusts_kmh: number;
+  wind_direction_deg: number;
+  wind_direction_cardinal: string;
+  surface_pressure_hpa: number;
+  elevation_meters: number;
+  weather_description: string;
+  soil_saturation_percent: number;
+  point_risk_score: number;
+  risk_tier: string;
+  hourly_forecast: HourlyForecastItem[];
+  updated_at: string;
+}

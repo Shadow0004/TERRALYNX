@@ -8,6 +8,7 @@ interface ZonePopupProps {
   allocations: ShelterAllocationItem[];
   onClose: () => void;
   onNavigateToShelters?: () => void;
+  onInspectWeather?: (lat: number, lng: number) => void;
 }
 
 export const ZonePopup: React.FC<ZonePopupProps> = ({
@@ -16,6 +17,7 @@ export const ZonePopup: React.FC<ZonePopupProps> = ({
   allocations,
   onClose,
   onNavigateToShelters,
+  onInspectWeather,
 }) => {
   const zoneAllocations = allocations.filter((a) => a.zone_id === zone.id);
 
@@ -143,6 +145,16 @@ export const ZonePopup: React.FC<ZonePopupProps> = ({
         </span>
         {zone.recommended_action}
       </div>
+
+      {/* Sector Live Weather Trigger Button */}
+      {onInspectWeather && (
+        <button
+          onClick={() => onInspectWeather(zone.center.lat, zone.center.lng)}
+          className="mt-2.5 w-full py-1.5 px-3 rounded-lg bg-[#1a233a] hover:bg-cyan-950/90 text-cyan-300 border border-cyan-600/40 hover:border-cyan-400 font-mono text-[11px] font-bold transition-all flex items-center justify-center space-x-1.5 shadow-md"
+        >
+          <span>🌦️ Inspect Sector Live Weather & Forecast</span>
+        </button>
+      )}
     </div>
   );
 };

@@ -144,12 +144,26 @@ class RadarLayerResponse(BaseModel):
     tile_url: Optional[str] = None
     attribution: str = ""
 
+class HourlyForecastItem(BaseModel):
+    time: str
+    iso_time: str
+    temperature_c: float
+    precipitation_probability: int
+    precipitation_mm: float
+    humidity_percent: int
+    wind_speed_kmh: float
+    wind_direction_deg: float
+    wind_direction_cardinal: str
+    weather_code: int
+    weather_description: str
+
 class PointTelemetryResponse(BaseModel):
     latitude: float
     longitude: float
     location_name: Optional[str] = "Coastal Sector"
     temperature_c: float
     humidity_percent: float
+    precipitation_probability: int = 50
     rainfall_rate_mm_hr: float
     rain_24h_sum_mm: float
     wind_speed_kmh: float
@@ -162,6 +176,7 @@ class PointTelemetryResponse(BaseModel):
     soil_saturation_percent: float
     point_risk_score: float
     risk_tier: str
+    hourly_forecast: List[HourlyForecastItem] = []
     updated_at: str
 
 @router.get("/weather/radar", response_model=RadarLayerResponse)

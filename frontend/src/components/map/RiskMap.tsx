@@ -615,6 +615,7 @@ export const RiskMap: React.FC<RiskMapProps> = ({
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-md px-4">
         <LocationSearchBar
           onSelectLocation={(lat, lng, locName) => {
+            setPinpointCoords([lng, lat]);
             if (onSetSimulationFocus) onSetSimulationFocus(lat, lng, locName);
           }}
           isLoading={isLoading}
@@ -698,6 +699,10 @@ export const RiskMap: React.FC<RiskMapProps> = ({
             shelters={shelters}
             allocations={allocations}
             onClose={() => setSelectedZone(null)}
+            onInspectWeather={(lat, lng) => {
+              setSelectedZone(null);
+              setPinpointCoords([lng, lat]);
+            }}
           />
         </div>
       )}
