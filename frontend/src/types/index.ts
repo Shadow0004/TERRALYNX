@@ -259,6 +259,10 @@ export interface SimulationOverrides {
   available_buses_override?: number;
   available_boats_override?: number;
   available_teams_override?: number;
+  available_rations_override?: number;
+  available_med_kits_override?: number;
+  available_generators_override?: number;
+  activate_temp_shelters?: boolean;
 }
 
 export interface OfficialCensusData {

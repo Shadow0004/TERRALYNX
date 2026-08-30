@@ -24,6 +24,11 @@ class SimulationOverrides(BaseModel):
     available_buses_override: Optional[int] = Field(default=None, ge=0, le=200)
     available_boats_override: Optional[int] = Field(default=None, ge=0, le=100)
     available_teams_override: Optional[int] = Field(default=None, ge=0, le=100)
+    available_rations_override: Optional[int] = Field(default=None, ge=0, le=200000)
+    available_med_kits_override: Optional[int] = Field(default=None, ge=0, le=1000)
+    available_generators_override: Optional[int] = Field(default=None, ge=0, le=100)
+    activate_temp_shelters: bool = Field(default=False, description="Whether to automatically activate temporary emergency shelters")
+
 
 class MetricDelta(BaseModel):
     metric_name: str

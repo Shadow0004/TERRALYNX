@@ -24,7 +24,8 @@ def optimize_shelter_allocation(
     zones: List[Zone],
     shelters: List[Shelter],
     candidate_temporary_shelters: List[TemporaryShelterCandidate],
-    disabled_shelter_ids: List[str] = None
+    disabled_shelter_ids: List[str] = None,
+    activate_temp_shelters: bool = False
 ) -> Tuple[List[ShelterAllocationItem], List[Shelter], List[TemporaryShelterCandidate], int]:
     """
     Allocates evacuation demand from danger zones to safe, active shelters.
@@ -59,6 +60,40 @@ def optimize_shelter_allocation(
             updated_s.assigned_zone_ids = []
             remaining_caps[s.id] = avail
         shelter_map[s.id] = updated_s
+
+    # If temporary emergency shelters activated via override, add them into active pool
+    if activate_temp_shelters and candidate_temporary_shelters:
+        for idx, temp in enumerate(candidate_temporary_shelters):
+            t_id = f"TEMP-SHELTER-{idx+1}"
+            if t_id not in disabled_set:
+                t_shelter = Shelter(
+                    id=t_id,
+                    name=f"🏛️ [TEMP ACTIVATED] {temp.name}",
+                    type="Temporary Emergency Complex",
+                    zone_id="ZONE-01",
+                    location=temp.location,
+                    elevation_meters=temp.elevation_meters,
+                    total_capacity=temp.potential_capacity,
+                    current_occupancy=0,
+                    safety_score=temp.suitability_score,
+                    is_active=True,
+                    is_govt_verified=True,
+                    verification_agency="OSDMA / District Magistrate",
+                    facility_code=f"TEMP-{temp.id}",
+                    structural_certification="Rapid Activation Cleared",
+                    has_backup_power=True,
+                    has_medical_station=True,
+                    water_capacity_liters=25000,
+                    food_supply_days=5,
+                    incoming_allocated_evacuees=0,
+                    projected_total_occupancy=0,
+                    remaining_capacity=temp.potential_capacity,
+                    utilization_percentage=0.0,
+                    is_overloaded=False,
+                    assigned_zone_ids=[]
+                )
+                shelter_map[t_id] = t_shelter
+                remaining_caps[t_id] = temp.potential_capacity
 
     # 2. Sort zones by urgency: CRITICAL first (highest risk score), then HIGH, etc.
     sorted_zones = sorted(

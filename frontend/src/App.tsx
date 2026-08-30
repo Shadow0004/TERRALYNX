@@ -167,6 +167,50 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleExecuteAllActions = () => {
+    if (!state) return;
+    const updatedActions = state.priority_actions.map((act) => ({
+      ...act,
+      status: 'COMPLETED' as const,
+    }));
+    setState({
+      ...state,
+      priority_actions: updatedActions,
+      kpis: {
+        ...state.kpis,
+        priority_actions_count: 0,
+      },
+    });
+  };
+
+  const handleRequisitionResource = async (resourceType: string, count: number) => {
+    if (!state) return;
+    const currentOverrides = state.overrides_applied || {};
+    let updatedOverrides = { ...currentOverrides };
+
+    if (resourceType.includes('Bus')) {
+      const cur = updatedOverrides.available_buses_override ?? 36;
+      updatedOverrides.available_buses_override = cur + count;
+    } else if (resourceType.includes('Boat') || resourceType.includes('Inflatable')) {
+      const cur = updatedOverrides.available_boats_override ?? 14;
+      updatedOverrides.available_boats_override = cur + count;
+    } else if (resourceType.includes('NDRF') || resourceType.includes('Rescue Team')) {
+      const cur = updatedOverrides.available_teams_override ?? 12;
+      updatedOverrides.available_teams_override = cur + count;
+    } else if (resourceType.includes('Ration') || resourceType.includes('Food')) {
+      const cur = updatedOverrides.available_rations_override ?? 45000;
+      updatedOverrides.available_rations_override = cur + count;
+    } else if (resourceType.includes('Medical') || resourceType.includes('Trauma')) {
+      const cur = updatedOverrides.available_med_kits_override ?? 120;
+      updatedOverrides.available_med_kits_override = cur + count;
+    } else if (resourceType.includes('Generator')) {
+      const cur = updatedOverrides.available_generators_override ?? 16;
+      updatedOverrides.available_generators_override = cur + count;
+    }
+
+    await handleRunSimulation(updatedOverrides);
+  };
+
   const handleToggleShelter = async (shelterId: string) => {
     if (!state) return;
     const currentDisabled = state.overrides_applied.disabled_shelter_ids || [];
@@ -246,6 +290,7 @@ export const App: React.FC = () => {
               <CommandCenterView
                 state={state}
                 onExecuteAction={handleExecuteAction}
+                onExecuteAllActions={handleExecuteAllActions}
                 onNavigateToMap={() => setActiveTab('risk_map')}
                 onNavigateToSimulator={() => setActiveTab('simulator')}
               />
@@ -286,6 +331,7 @@ export const App: React.FC = () => {
             {activeTab === 'resources' && (
               <ResourcePlannerTable
                 resources={state.resources}
+                onRequisitionResource={handleRequisitionResource}
               />
             )}
 

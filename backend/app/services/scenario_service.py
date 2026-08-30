@@ -113,7 +113,8 @@ class ScenarioService:
             zones=processed_zones,
             shelters=self.raw_shelters,
             candidate_temporary_shelters=self.raw_temp_shelters,
-            disabled_shelter_ids=overrides.disabled_shelter_ids
+            disabled_shelter_ids=overrides.disabled_shelter_ids,
+            activate_temp_shelters=overrides.activate_temp_shelters
         )
 
         # 5. Evacuation Routing Paths

@@ -67,18 +67,18 @@ def calculate_resource_plan(
 
     # 5. Emergency Food & Water Ration Units (3-day sustenance)
     required_rations = max(5000, total_evacuation_demand * 3)
-    avail_rations = DEFAULT_AVAILABLE_INVENTORY["food_water_packs"]
+    avail_rations = overrides.available_rations_override if overrides.available_rations_override is not None else DEFAULT_AVAILABLE_INVENTORY["food_water_packs"]
     rations_shortfall = max(0, required_rations - avail_rations)
 
     # 6. Medical Trauma & First Aid Kits
     active_shelters_count = len([s for s in shelters if s.is_active])
     required_med_kits = active_shelters_count * 12 + len(priority_zones) * 5
-    avail_med_kits = DEFAULT_AVAILABLE_INVENTORY["medical_kits"]
+    avail_med_kits = overrides.available_med_kits_override if overrides.available_med_kits_override is not None else DEFAULT_AVAILABLE_INVENTORY["medical_kits"]
     med_kits_shortfall = max(0, required_med_kits - avail_med_kits)
 
     # 7. Mobile Emergency Generators
     required_generators = active_shelters_count * 2
-    avail_generators = DEFAULT_AVAILABLE_INVENTORY["mobile_generators"]
+    avail_generators = overrides.available_generators_override if overrides.available_generators_override is not None else DEFAULT_AVAILABLE_INVENTORY["mobile_generators"]
     gen_shortfall = max(0, required_generators - avail_generators)
 
     plan = [

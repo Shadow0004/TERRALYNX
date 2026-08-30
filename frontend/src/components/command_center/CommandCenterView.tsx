@@ -9,6 +9,7 @@ import { InfrastructureRiskTable } from './InfrastructureRiskTable';
 interface CommandCenterViewProps {
   state: DistrictState;
   onExecuteAction: (id: string) => void;
+  onExecuteAllActions?: () => void;
   onNavigateToMap: () => void;
   onNavigateToSimulator: () => void;
 }
@@ -16,6 +17,7 @@ interface CommandCenterViewProps {
 export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   state,
   onExecuteAction,
+  onExecuteAllActions,
   onNavigateToMap,
   onNavigateToSimulator,
 }) => {
@@ -32,6 +34,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         <PriorityActionsList
           actions={state.priority_actions}
           onExecuteAction={onExecuteAction}
+          onExecuteAllActions={onExecuteAllActions}
         />
         <ActiveAlertsFeed alerts={state.alerts} />
       </div>
