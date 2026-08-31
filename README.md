@@ -49,11 +49,12 @@ Coastal and river delta regions in Eastern India—specifically **Odisha's Mahan
 │ Open-Meteo, OSM, Census │     │     IMPACT ENGINE      │     │    DEMAND MODELING     │
 └─────────────────────────┘     └────────────────────────┘     └────────────────────────┘
                                                                            │
-┌─────────────────────────┐     ┌────────────────────────┐                 ▼
-│  COMMAND-CENTER HUD &   │ ◄── │ RESOURCE FLEET SIZING  │ ◄── ┌────────────────────────┐
-│ CELL BROADCAST (CAP)    │     │   & SHORTFALL MATRIX   │     │ CAPACITY-CONSTRAINED   │
-└─────────────────────────┘     └────────────────────────┘     │   SHELTER OPTIMIZATION │
-             │                                                 └────────────────────────┘
+                                                                           ▼
+┌─────────────────────────┐     ┌────────────────────────┐     ┌────────────────────────┐
+│  COMMAND-CENTER HUD &   │ ◄── │ RESOURCE FLEET SIZING  │ ◄── │  CAPACITY-CONSTRAINED  │
+│  CELL BROADCAST (CAP)   │     │   & SHORTFALL MATRIX   │     │  SHELTER OPTIMIZATION  │
+└─────────────────────────┘     └────────────────────────┘     └────────────────────────┘
+             │                               
              ▼
 ┌─────────────────────────┐
 │ WHAT-IF SIMULATOR WITH  │
