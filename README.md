@@ -159,12 +159,11 @@ $$E(z) = \text{Population}(z) \times \text{ExposureMultiplier}(R(z)) \times \lef
 | Asset Class | Sizing Equation | Operational Rationale |
 |---|---|---|
 | **40-pax Evacuation Buses** | $\lceil (E_{\text{total}} \times 0.80) / (40 \times 1.5) \rceil$ | Assumes $80\%$ transit dependence & $1.5$ convoy turnaround cycles |
-| **Inflatable Rescue Boats & OBMs** | $4 \times N_{\text{delta\_zones}} + 2 \times N_{\text{critical\_zones}}$ | Allocated to low-elevation waterlogged zones ($\le 3.5\text{m}$) |
+| **Inflatable Rescue Boats & OBMs** | $4 \times N_{\text{delta zones}} + 2 \times N_{\text{critical zones}}$ | Allocated to low-elevation waterlogged zones ($\le 3.5\text{m}$) |
 | **ALS Ambulances** | $\lceil \text{MedicalDependencies} / 18 \rceil + N_{\text{hospitals}}$ | Dedicated to ICU hospital transfers & registered fragile patients |
-| **Tactical NDRF / ODRAF Teams** | $\lceil E_{\text{critical}} / 650 \rceil + N_{\text{critical\_zones}}$ | 10-person units deployed to high-risk structural breach zones |
+| **Tactical NDRF / ODRAF Teams** | $\lceil E_{\text{critical}} / 650 \rceil + N_{\text{critical zones}}$ | 10-person units deployed to high-risk structural breach zones |
 | **72-Hour Sustenance Rations** | $E_{\text{total}} \times 3 \text{ days}$ | 72-hour survival food & potable water packs for active shelters |
-| **Heavy Mobile Diesel Generators** | $N_{\text{active\_shelters}} \times 2$ | 25kVA generators to ensure continuous water pumping & lighting |
-
+| **Heavy Mobile Diesel Generators** | $N_{\text{active shelters}} \times 2$ | 25kVA generators to ensure continuous water pumping & lighting |
 ---
 
 ## 📂 Project Directory Structure
